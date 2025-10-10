@@ -1,2 +1,0 @@
-source /home/vprime/Documents/github/ESP32_LaserDriver/Source/Laser_Driver/build/bootloader/gdbinit/symbols
-source /home/vprime/Documents/github/ESP32_LaserDriver/Source/Laser_Driver/build/bootloader/gdbinit/connect
