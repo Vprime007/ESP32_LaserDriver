@@ -1,4 +1,1 @@
-[submodule "Source/SDK"]
-	path = Source/SDK
-	url = https://github.com/espressif/esp-idf.git
-	branch = release/v5.5
+
