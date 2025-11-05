@@ -15,10 +15,15 @@
 #include "esp_flash.h"
 #include "esp_system.h"
 
+#include "esp_log.h"
+
+#include "bsp.h"
+#include "taskPriority.h"
+
 /******************************************************************************
 *   Private Definitions
 *******************************************************************************/
-
+#define LOG_LOCAL_LEVEL                 (ESP_LOG_INFO)         
 
 /******************************************************************************
 *   Private Macros
@@ -33,7 +38,7 @@
 /******************************************************************************
 *   Private Functions Declaration
 *******************************************************************************/
-
+static void tMainTask(void *pvParameters);
 
 /******************************************************************************
 *   Public Variables
@@ -43,7 +48,9 @@
 /******************************************************************************
 *   Private Variables
 *******************************************************************************/
+static TaskHandle_t main_task_handle = NULL;
 
+static const char * TAG = "MAIN";
 
 /******************************************************************************
 *   Error Check
@@ -52,6 +59,33 @@
 
 /******************************************************************************
 *   Private Functions Definitions
+*******************************************************************************/
+/***************************************************************************//*!
+*  \brief Main task
+*
+*   This function is the main task functio.
+*
+*   Preconditions:  None.
+*
+*******************************************************************************/
+static void tMainTask(void *pvParameters){
+
+    ESP_LOGI(TAG, "Starting Main task");
+
+    for(;;){
+
+        vTaskDelay(1000/portTICK_PERIOD_MS);
+    }
+    vTaskDelete(NULL);
+}
+
+/***************************************************************************//*!
+*  \brief App main.
+*
+*   This function is the program entry point.
+*
+*   Preconditions:  None.
+*
 *******************************************************************************/
 void app_main(void){
 
@@ -79,6 +113,18 @@ void app_main(void){
            (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
 
     printf("Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
+
+    //create main task
+    if(pdTRUE != xTaskCreate(tMainTask,
+                             "Main task",
+                             2048,
+                             NULL,
+                             MAIN_TASK_PRIORITY,
+                             &main_task_handle)){
+
+        ESP_LOGE(TAG, "Failed to create Main task");
+        while(1);//Stall here...
+    }
 }
 
 /******************************************************************************
@@ -94,6 +140,4 @@ void app_main(void){
 /******************************************************************************
 *   Interrupts
 *******************************************************************************/
-
-
 

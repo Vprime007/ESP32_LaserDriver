@@ -15,5 +15,9 @@
     "--background-index",
     "--query-driver=/home/vprime/.espressif/tools/xtensa-esp-elf/esp-14.2.0_20241119/xtensa-esp-elf/bin/xtensa-esp32-elf-gcc",
     "--compile-commands-dir=${workspaceFolder}/build"
-  ]
+  ],
+  "files.associations": {
+    "uart.h": "c",
+    "hardwareinterface.h": "c"
+  }
 }

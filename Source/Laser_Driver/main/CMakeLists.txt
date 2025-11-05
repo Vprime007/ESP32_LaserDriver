@@ -3,8 +3,20 @@ idf_component_register(
     SRCS            "main.c"
                     "UserInterface/userInterface.c"
                     
-    PRIV_REQUIRES   spi_flash
-                    
+                    "Config/myShell_cfg.c"
 
-    INCLUDE_DIRS    "UserInterface"
+                    "Lib/myShell/src/myShell.c"
+
+                    "BSP/shellComUART.c"
+                    
+    PRIV_REQUIRES   spi_flash
+                    driver
+                    
+    INCLUDE_DIRS    "."
+                    "UserInterface"
+                    "Config"
+                    "Lib/myShell/include"
+                    "BSP"
 )
+
+component_compile_options(-Wno-error=format= -Wno-format)
