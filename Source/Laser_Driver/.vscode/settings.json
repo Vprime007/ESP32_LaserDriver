@@ -18,6 +18,11 @@
   ],
   "files.associations": {
     "uart.h": "c",
-    "hardwareinterface.h": "c"
+    "hardwareinterface.h": "c",
+    "freertos.h": "c",
+    "stdint.h": "c",
+    "taskpriority.h": "c",
+    "userinterface.h": "c",
+    "gpio.h": "c"
   }
 }

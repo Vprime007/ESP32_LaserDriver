@@ -1,24 +1,26 @@
-#ifndef __BSP_H
-#define __BSP_H
+#ifndef __HWI_H
+#define __HWI_H
 
 /******************************************************************************
 *   Public Definitions
 *******************************************************************************/
-#define BSP_LCD_SCL_GPIO            (11)
-#define BSP_LCD_SDA_GPIO            (12)
+#define HWI_TRIGGER_IN              (8)
 
-#define BSP_BTN_P_GPIO              (13)
-#define BSP_BTN_M_GPIO              (14)
-#define BSP_BTN_SELECT_GPIO         (15)
-#define BSP_USER_LED_GPIO           (16)
+#define HWI_LCD_SCL_GPIO            (11)
+#define HWI_LCD_SDA_GPIO            (12)
 
-#define BSP_PA_DIM_GPIO             (18)
-#define BSP_PB_DIM_GPIO             (21)
+#define HWI_BTN_P_GPIO              (13)
+#define HWI_BTN_M_GPIO              (14)
+#define HWI_BTN_SELECT_GPIO         (15)
+#define HWI_USER_LED_GPIO           (16)
 
-#define BSP_SENSOR_EN_GPIO          (41)
-#define BSP_PHASE_EN_GPIO           (42)
-#define BSP_PHASE_FAN_GPIO          (45)
-#define BSP_LOAD_FAN_GPIO           (46)
+#define HWI_PA_DIM_GPIO             (18)
+#define HWI_PB_DIM_GPIO             (21)
+
+#define HWI_SENSOR_EN_GPIO          (41)
+#define HWI_PHASE_EN_GPIO           (42)
+#define HWI_PHASE_FAN_GPIO          (45)
+#define HWI_LOAD_FAN_GPIO           (46)
 
 /******************************************************************************
 *   Public Macros

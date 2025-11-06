@@ -17,7 +17,7 @@
 
 #include "esp_log.h"
 
-#include "bsp.h"
+#include "hwi.h"
 #include "taskPriority.h"
 
 /******************************************************************************
