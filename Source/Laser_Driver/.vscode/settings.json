@@ -23,6 +23,7 @@
     "stdint.h": "c",
     "taskpriority.h": "c",
     "userinterface.h": "c",
-    "gpio.h": "c"
+    "gpio.h": "c",
+    "cstdlib": "c"
   }
 }
