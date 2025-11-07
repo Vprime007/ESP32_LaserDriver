@@ -7,7 +7,7 @@
 /******************************************************************************
 *   Public Definitions
 *******************************************************************************/
-#define LDRV_CFG_MAX_NB_LED                 (2)
+#define LDRV_CFG_MAX_NB_LED                 (3)
 #define LDRV_CFG_MAX_PWM_DUTY               (255)
 #define LDRV_CFG_MIN_PWM_DUTY               (0)
 
