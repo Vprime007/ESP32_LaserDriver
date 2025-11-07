@@ -43,6 +43,8 @@ static void tTriggerTask(void *pvParameters);
 static TRIGGER_Config_t trigger_config = {0}; 
 static triggerStateChangeCallback_t state_change_callback = NULL;
 static TRIGGER_State_t current_state = TRIGGER_STATE_INVALID;
+static uint32_t trigger_press_cptr = 0;
+static uint32_t trigger_release_cptr = 0;
 
 static TaskHandle_t trigger_task_handle = NULL;
 
@@ -56,6 +58,19 @@ static const char * TAG = "TRIGGER";
 /******************************************************************************
 *   Private Functions Definitions
 *******************************************************************************/
+/***************************************************************************//*!
+*  \brief Trigger Task
+*
+*   This function is teh trigger driver task. It monitor the trigger input
+*   and detect state changes (PRESS/RELEASE).
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
 static void tTriggerTask(void *pvParameters){
 
     ESP_LOGI(TAG, "Starting Trigger task");
@@ -63,8 +78,48 @@ static void tTriggerTask(void *pvParameters){
     for(;;){
 
         //Get trigger input state
+        TRIGGER_State_t new_state = TRIGGER_STATE_INVALID;
+        uint8_t level = gpio_get_level(trigger_config.trigger_gpio);
+        if((level && (trigger_config.active_level == TRIGGER_ACTIVE_LEVEL_HIGH)) || 
+           (!level && (trigger_config.active_level == TRIGGER_ACTIVE_LEVEL_LOW))){
 
-        //if a transitio
+            new_state = TRIGGER_STATE_PRESS;
+        }
+        else{
+            new_state = TRIGGER_STATE_RELEASE;
+        }
+
+        if(new_state == TRIGGER_STATE_PRESS){
+            
+            if(trigger_press_cptr < 0xFFFFFFFF)     trigger_press_cptr++;
+            trigger_release_cptr = 0;
+
+            if((trigger_press_cptr >= TRIGGER_DEBOUNCE_FACTOR) && 
+               (trigger_press_cptr != 0xFFFFFFFF)){
+
+                if(new_state != current_state){
+                    trigger_press_cptr = 0xFFFFFFFF;
+                    current_state = new_state;
+                    if(state_change_callback != NULL)   state_change_callback(current_state);
+                }
+            }
+        }
+        else{
+
+            if(trigger_release < 0xFFFFFFFF)    trigger_release_cptr++;
+            trigger_press_cptr = 0;
+
+            if((trigger_release_cptr >= TRIGGER_DEBOUNCE_FACTOR) && 
+               (trigger_release_cptr != 0xFFFFFFFF)){
+
+                if(new_state != current_state){
+                    trigger_release_cptr = 0xFFFFFFFF;
+                    current_state = new_state;
+                    if(state_change_callback != NULL)   state_change_callback(current_state);
+                }
+
+            }
+        }
 
         vTaskDelay(TRIGGER_MONITORING_PERIOD_MS/portTICK_PERIOD_MS);
     }
@@ -78,6 +133,20 @@ static void tTriggerTask(void *pvParameters){
 
 /******************************************************************************
 *   Public Functions Definitions
+*******************************************************************************/
+/***************************************************************************//*!
+*  \brief Trigger Driver initialization.
+*
+*   This function is used to initialize the trigger driver. When a trigger
+*   state change is detected, the callback function will be called with the 
+*   new state as parameter.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \return     Operation status
+*
 *******************************************************************************/
 TRIGGER_Ret_t TRIGGER_InitDriver(TRIGGER_Config_t *pConfig,
                                  triggerStateChangeCallback_t callback){

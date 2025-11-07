@@ -51,6 +51,20 @@ typedef enum TRIGGER_Ret_e{
 /******************************************************************************
 *   Public Functions Declarations
 *******************************************************************************/
+/***************************************************************************//*!
+*  \brief Trigger Driver initialization.
+*
+*   This function is used to initialize the trigger driver. When a trigger
+*   state change is detected, the callback function will be called with the 
+*   new state as parameter.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
 TRIGGER_Ret_t TRIGGER_InitDriver(TRIGGER_Config_t *pConfig,
                                  triggerStateChangeCallback_t callback);
 
