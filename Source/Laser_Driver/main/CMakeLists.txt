@@ -11,6 +11,9 @@ idf_component_register(
 
                     "HWI/shellComUART.c"
                     "HWI/adcController.c"
+
+                    "Sensors/temperatureMonitoring.c"
+                    "Sensors/pwrMonitoring.c"
                     
     PRIV_REQUIRES   spi_flash
                     driver
@@ -21,6 +24,7 @@ idf_component_register(
                     "Config"
                     "Lib/myShell/include"
                     "HWI"
+                    "Sensors"
 )
 
 component_compile_options(-Wno-error=format= -Wno-format)
