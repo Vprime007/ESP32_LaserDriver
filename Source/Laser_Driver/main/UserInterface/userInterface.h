@@ -20,6 +20,12 @@ typedef enum UI_Event_e{
     UI_EVENT_BOOT,
     UI_EVENT_RESET,
 
+    UI_EVENT_OVER_TEMP,
+    UI_EVENT_NORMAL_TEMP,
+
+    UI_EVENT_LOW_VOLTAGE,
+    UI_EVENT_NORMAL_VOLTAGE,
+
     UI_EVENT_INVALID,
 }UI_Event_t;
 
