@@ -14,6 +14,7 @@ idf_component_register(
 
                     "Sensors/temperatureMonitoring.c"
                     "Sensors/pwrMonitoring.c"
+                    "Sensors/tempConversion.c"
                     
     PRIV_REQUIRES   spi_flash
                     driver
