@@ -2,6 +2,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 
 #include "driver/gpio.h"
 #include "esp_log.h"
@@ -14,7 +15,11 @@
 /******************************************************************************
 *   Private Definitions
 *******************************************************************************/
-#define LOG_LOCAL_LEVEL             ESP_LOG_INFO
+#define SENSOR_SEMAPHORE_TIMEOUT_MS         (1000)
+#define SENSOR_LOOP_PERIOD_MS               (250)
+#define INTER_STEP_DELAY_MS                 (10)
+
+#define LOG_LOCAL_LEVEL                     ESP_LOG_INFO
 
 /******************************************************************************
 *   Private Macros
@@ -51,6 +56,7 @@ static void disableTempSensors(void);
 *   Private Variables
 *******************************************************************************/
 static TaskHandle_t sensor_task_handle = NULL;
+static SemaphoreHandle_t sensor_semphr_handle = NULL;
 
 static SENSOR_Step_t sensor_step = SENSOR_STEP_INVALID;
 
@@ -73,9 +79,81 @@ static void tSensorTask(void *pvParameters){
 
     ESP_LOGI(TAG, "Starting sensor task");
 
+    xSemaphoreGive(sensor_semphr_handle);
+
     for(;;){
 
-        vTaskDelay(1000/portTICK_PERIOD_MS);
+        if(pdTRUE == xSemaphoreTake(sensor_semphr_handle, SENSOR_SEMAPHORE_TIMEOUT_MS/portTICK_PERIOD_MS)){
+
+            switch(sensor_step){
+
+                case SENSOR_STEP_IDLE:
+                {
+                    //Go to next step
+                    sensor_step = SENSOR_STEP_EN_SENSOR;
+                    vTaskDelay(INTER_STEP_DELAY_MS/portTICK_PERIOD_MS);
+                    xSemaphoreGive(sensor_semphr_handle);
+                }
+                break;
+
+                case SENSOR_STEP_EN_SENSOR:
+                {
+                    //Enable temperature sensors
+                    enableTempSensors();
+                    
+                    //Go to next step
+                    sensor_step = SENSOR_STEP_START_ADC;
+                    vTaskDelay(INTER_STEP_DELAY_MS/portTICK_PERIOD_MS);
+                    xSemaphoreGive(sensor_semphr_handle);
+                }
+                break;
+
+                case SENSOR_STEP_START_ADC:
+                {
+
+                    //ADC sampling is asynchronous so
+                    //just specifiy the the next step
+                    sensor_step = SENSOR_STEP_PROCESS_PWR;
+                }
+                break;
+
+                case SENSOR_STEP_PROCESS_PWR:
+                {
+                    //Disable temperature sensors
+                    disableTempSensors();
+
+                    //Pass raw adc result to the pwr monitoring module
+
+                    //Go to next step
+                    sensor_step = SENSOR_STEP_PROCESS_TEMP;
+                    vTaskDelay(INTER_STEP_DELAY_MS/portTICK_PERIOD_MS);
+                    xSemaphoreGive(sensor_semphr_handle);
+
+                }
+                break;
+
+                case SENSOR_STEP_PROCESS_TEMP:
+                {
+                    //Pass raw adc result to the temperature monitoring module
+
+                    //Go to next step
+                    sensor_step = SENSOR_STEP_IDLE;
+                    vTaskDelay(SENSOR_LOOP_PERIOD_MS/portTICK_PERIOD_MS);
+                    xSemaphoreGive(sensor_semphr_handle);
+                }
+                break;
+
+                case SENSOR_STEP_INVALID:
+                default:
+                {
+                    //Invalid step... return to IDLE
+                    sensor_step = SENSOR_STEP_IDLE;
+                    vTaskDelay(INTER_STEP_DELAY_MS/portTICK_PERIOD_MS);
+                    xSemaphoreGive(sensor_semphr_handle);
+                }
+                break;
+            }
+        }
     }
     vTaskDelete(NULL);
 }
@@ -99,6 +177,13 @@ SENSOR_Ret_t SENSOR_InitController(void){
     if(ESP_OK != gpio_config(&gpio_cfg)){
 
         ESP_LOGE(TAG, "Failed to init sensors gpio");
+        return SENSOR_STATUS_ERROR;
+    }
+
+    //Create semaphore
+    sensor_semphr_handle = xSemaphoreCreateBinary();
+    if(sensor_semphr_handle == NULL){
+        ESP_LOGE(TAG, "Failed to create sensor semaphore");
         return SENSOR_STATUS_ERROR;
     }
 

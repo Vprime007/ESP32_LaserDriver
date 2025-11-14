@@ -34,5 +34,4 @@ typedef enum SENSOR_Ret_e{
 *******************************************************************************/
 SENSOR_Ret_t SENSOR_InitController(void);
 
-
 #endif//__SENSOR_CONTROLLER_H
