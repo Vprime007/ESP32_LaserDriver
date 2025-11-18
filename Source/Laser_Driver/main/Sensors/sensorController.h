@@ -32,6 +32,19 @@ typedef enum SENSOR_Ret_e{
 /******************************************************************************
 *   Public Functions Declarations
 *******************************************************************************/
+/***************************************************************************//*!
+*  \brief Sensor Controller initialization
+*
+*   This function perform the initialization of the sensor controller module
+*   and associated peripherals.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \return         Operation status
+*
+*******************************************************************************/
 SENSOR_Ret_t SENSOR_InitController(void);
 
 #endif//__SENSOR_CONTROLLER_H
