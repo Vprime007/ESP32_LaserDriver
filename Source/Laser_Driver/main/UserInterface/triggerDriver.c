@@ -106,7 +106,7 @@ static void tTriggerTask(void *pvParameters){
         }
         else{
 
-            if(trigger_release < 0xFFFFFFFF)    trigger_release_cptr++;
+            if(trigger_release_cptr < 0xFFFFFFFF)    trigger_release_cptr++;
             trigger_press_cptr = 0;
 
             if((trigger_release_cptr >= TRIGGER_DEBOUNCE_FACTOR) && 

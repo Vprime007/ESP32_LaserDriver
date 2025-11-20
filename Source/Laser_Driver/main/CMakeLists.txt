@@ -3,7 +3,7 @@ idf_component_register(
     SRCS            "main.c"
                     "UserInterface/userInterface.c"
                     "UserInterface/led/ledDriver.c"
-                    "userInterface/laserController.c"
+                    "UserInterface/laserController.c"
                     
                     "Config/myShell_cfg.c"
                     "Config/ledDriver_cfg.c"
