@@ -24,6 +24,7 @@
     "taskpriority.h": "c",
     "userinterface.h": "c",
     "gpio.h": "c",
-    "cstdlib": "c"
+    "cstdlib": "c",
+    "myshell_cfg.h": "c"
   }
 }

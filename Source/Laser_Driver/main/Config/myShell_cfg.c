@@ -22,7 +22,18 @@
 /******************************************************************************
 *   Private Functions Declaration
 *******************************************************************************/
+static int32_t shellSetPhaseActiveDuty(int32_t argc, char *argv[]);
+static int32_t shellSetPhaseInactiveDuty(int32_t argc, char *argv[]);
+static int32_t shellEnablePhase(int32_t argc, char *argv[]);
+static int32_t shellDisablePhase(int32_t argc, char *argv[]);
+static int32_t shellSetPhaseOvt(int32_t argc, char *argv[]);
+static int32_t shellSetPhaseOvtRelease(int32_t argc, char *argv[]);
+static int32_t shellSetLoadOvt(int32_t argc, char *argv[]);
+static int32_t shellSetLoadOvtRelease(int32_t argc, char * argv[]);
+static int32_t shellSetUvl(int32_t argc, char *argv[]);
 
+static int32_t shellGetTemperature(int32_t argc, char *argv[]);
+static int32_t shellGetPwm(int32_t argc, char *argv[]);
 
 /******************************************************************************
 *   Public Variables
@@ -43,7 +54,60 @@ static uint32_t nb_shell_cmd = ARRAY_SIZE(shell_cmd_table);
 /******************************************************************************
 *   Private Functions Definitions
 *******************************************************************************/
+static int32_t shellSetPhaseActiveDuty(int32_t argc, char *argv[]){
 
+    return 0;
+}
+
+static int32_t shellSetPhaseInactiveDuty(int32_t argc, char *argv[]){
+
+    return 0;
+}
+
+static int32_t shellEnablePhase(int32_t argc, char *argv[]){
+
+    return 0;
+}
+
+static int32_t shellDisablePhase(int32_t argc, char *argv[]){
+
+    return 0;
+}
+
+static int32_t shellSetPhaseOvt(int32_t argc, char *argv[]){
+
+    return 0;
+}
+
+static int32_t shellSetPhaseOvtRelease(int32_t argc, char *argv[]){
+
+    return 0;
+}
+
+static int32_t shellSetLoadOvt(int32_t argc, char *argv[]){
+
+    return 0;
+}
+
+static int32_t shellSetLoadOvtRelease(int32_t argc, char *argv[]){
+
+    return 0;
+}
+
+static int32_t shellSetUvl(int32_t argc, char *argv[]){
+
+    return 0;
+}
+
+static int32_t shellGetTemperature(int32_t argc, char *argv[]){
+
+    return 0;
+}
+
+static int32_t shellGetPwm(int32_t argc, char *argv[]){
+
+    return 0;
+}
 
 /******************************************************************************
 *   Public Functions Definitions
