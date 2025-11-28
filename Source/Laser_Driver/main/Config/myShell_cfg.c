@@ -30,10 +30,9 @@ static int32_t shellSetPhaseOvt(int32_t argc, char *argv[]);
 static int32_t shellSetPhaseOvtRelease(int32_t argc, char *argv[]);
 static int32_t shellSetLoadOvt(int32_t argc, char *argv[]);
 static int32_t shellSetLoadOvtRelease(int32_t argc, char * argv[]);
-static int32_t shellSetUvl(int32_t argc, char *argv[]);
 
 static int32_t shellGetTemperature(int32_t argc, char *argv[]);
-static int32_t shellGetPwm(int32_t argc, char *argv[]);
+static int32_t shellGetPwr(int32_t argc, char *argv[]);
 
 /******************************************************************************
 *   Public Variables
@@ -47,6 +46,16 @@ static int32_t shellGetPwm(int32_t argc, char *argv[]);
 //The table should minimally contain the 'help' function.
 static SHELL_Command_t shell_cmd_table[] = {
     {"help", SHELL_HelpHandler, "Lists all commands"},
+    {"set-active-duty", shellSetPhaseActiveDuty, "Set ON duty-cyle (in percent)"},
+    {"set-idle-duty", shellSetPhaseInactiveDuty, "Set OFF duty-cycl (in percent)"},
+    {"enable-phase", shellEnablePhase, "Enable phases outputs"},
+    {"disable-phase", shellDisablePhase, "Disable phases outputs"},
+    {"set-phase-ovt-thr", shellSetPhaseOvt, "Set phases OVT threshold (in *C)"},
+    {"set-phase-ovt-rel", shellSetPhaseOvtRelease, "Set phases OVT release (in *C)"},
+    {"set-load-ovt-thr", shellSetLoadOvt, "Set Load OVT threshold (in *C)"},
+    {"set-load-ovt-rel", shellSetLoadOvtRelease, "Set Load OVT release (in *C)"},
+    {"get-temp", shellGetTemperature, "Get temperature values (in *C)"},
+    {"get-pwr", shellGetPwr, "Get pwr measurements"},
 };
 
 static uint32_t nb_shell_cmd = ARRAY_SIZE(shell_cmd_table);
@@ -94,17 +103,12 @@ static int32_t shellSetLoadOvtRelease(int32_t argc, char *argv[]){
     return 0;
 }
 
-static int32_t shellSetUvl(int32_t argc, char *argv[]){
-
-    return 0;
-}
-
 static int32_t shellGetTemperature(int32_t argc, char *argv[]){
 
     return 0;
 }
 
-static int32_t shellGetPwm(int32_t argc, char *argv[]){
+static int32_t shellGetPwr(int32_t argc, char *argv[]){
 
     return 0;
 }

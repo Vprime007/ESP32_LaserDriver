@@ -18,6 +18,8 @@ idf_component_register(
                     "Sensors/tempConversion.c"
                     "Sensors/sensorController.c"
                     
+                    "Alarm/alarmController.c"
+
     PRIV_REQUIRES   spi_flash
                     driver
                     
@@ -28,6 +30,7 @@ idf_component_register(
                     "Lib/myShell/include"
                     "HWI"
                     "Sensors"
+                    "Alarm"
 )
 
 component_compile_options(-Wno-error=format= -Wno-format)

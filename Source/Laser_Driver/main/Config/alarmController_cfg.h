@@ -1,15 +1,13 @@
-#ifndef __TASK_PRIORITY_H
-#define __TASK_PRIORITY_H
+#ifndef __ALARM_CONTROLLER_CFG_H
+#define __ALARM_CONTROLLER_CFG_H
+
+#include <stdlib.h>
+#include "alarmController.h"
 
 /******************************************************************************
 *   Public Definitions
 *******************************************************************************/
-#define MAIN_TASK_PRIORITY              (4)
-#define SHCOM_TASK_PRIORITY             (5)
-#define SENSOR_TASK_PRIORITY            (6)
-#define ALARM_TASK_PRIORITY             (7)
-#define UI_TASK_PRIORITY                (8)
-#define TRIGGER_TASK_PRIORITY           (9)
+#define ALARM_MONITORING_PERIOD_MS                  (250)
 
 /******************************************************************************
 *   Public Macros
@@ -19,6 +17,14 @@
 /******************************************************************************
 *   Public Data Types
 *******************************************************************************/
+typedef enum ALARM_Src_e{
+    ALARM_SRC_LOAD_TEMP,
+    ALARM_SRC_PHASE_A_TEMP,
+    ALARM_SRC_PHASE_B_TEMP,
+
+    ALARM_NUMBER_SRC,
+    ALARM_SRC_INVALID = ALARM_NUMBER_SRC,
+}ALARM_Src_t;
 
 
 /******************************************************************************
@@ -32,8 +38,8 @@
 
 
 /******************************************************************************
-*   Public Functions
+*   Public Functions Declarations
 *******************************************************************************/
 
 
-#endif//__TASK_PRIORITY_H
+#endif//__ALARM_CONTROLLER_CFG_H

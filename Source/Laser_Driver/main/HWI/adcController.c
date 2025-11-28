@@ -11,6 +11,8 @@
 
 #include "soc/soc_caps.h"
 
+#include "esp_log.h"
+
 #include "adcController.h"
 
 /******************************************************************************

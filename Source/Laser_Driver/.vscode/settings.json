@@ -25,6 +25,9 @@
     "userinterface.h": "c",
     "gpio.h": "c",
     "cstdlib": "c",
-    "myshell_cfg.h": "c"
+    "myshell_cfg.h": "c",
+    "stdio.h": "c",
+    "adccontroller.h": "c",
+    "alarmcontroller.h": "c"
   }
 }
