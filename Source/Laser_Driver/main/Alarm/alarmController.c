@@ -7,6 +7,9 @@
 
 #include "esp_log.h"
 
+#include "temperatureMonitoring.h"
+#include "pwrMonitoring.h"
+
 #include "taskPriority.h"
 #include "alarmController.h"
 
@@ -38,9 +41,13 @@ static void tAlarmTask(void *pvParameters);
 /******************************************************************************
 *   Private Variables
 *******************************************************************************/
-static AlarmStatusCallback_t alarm_callback = NULL;
-static AlarmMonitoring_t monitoring_alarm = NULL; 
+static AlarmStateCallback_t alarm_callback = NULL;
 static ALARM_State_t alarm_state[ALARM_NUMBER_SRC] = {0};
+
+static int16_t temp_threshold;
+static int16_t temp_release;
+static int16_t volt_threshold;
+static int16_t volt_release;
 
 static TaskHandle_t alarm_task_handle = NULL;
 static SemaphoreHandle_t alarm_mutex_handle = NULL;
@@ -64,17 +71,47 @@ static void tAlarmTask(void *pvParameters){
         vTaskDelay(ALARM_MONITORING_PERIOD_MS/portTICK_PERIOD_MS);
 
         xSemaphoreTake(alarm_mutex_handle, portMAX_DELAY);
-        //Scan alarm table and monitor each of them
-        for(uint8_t i=0; i<ALARM_NUMBER_SRC; i++){
-            ALARM_State_t new_state = monitoring_alarm(i);
-            //Check if current state differ from previous one
-            if(alarm_state[i] != new_state){
-                //Update alarm state
-                alarm_state[i] = new_state;
-                //Alarm state change callback
-                alarm_callback(i, alarm_state[i]);
-            }
+
+        //Get load temp value 
+        int16_t load_temp = TEMP_ERROR_INVALID;
+        if(TEMP_STATUS_OK != TEMP_GetTemperature(TEMP_SENSOR_ID_LOAD, &load_temp)){
+            ESP_LOGI(TAG, "Failed to get load temp");
         }
+        else{
+            //Process load temp value
+        
+        } 
+
+        //Get phase A temp value
+        int16_t pA_temp = TEMP_ERROR_INVALID;
+        if(TEMP_STATUS_OK != TEMP_GetTemperature(TEMP_SENSOR_ID_PHASE_A, &pA_temp)){
+            ESP_LOGI(TAG, "Failed to get phase A temp");
+        }
+        else{
+            //process phase A temp value
+        
+        }
+
+        //Get phase B temp value
+        int16_t pB_temp = TEMP_ERROR_INVALID;
+        if(TEMP_STATUS_OK != TEMP_GetTemperature(TEMP_SENSOR_ID_PHASE_B, &pB_temp)){
+            ESP_LOGI(TAG, "Failed to get phase B temp");
+        }
+        else{
+            //process phase B temp value
+        
+        }
+
+        //Get Vbus voltage
+        int16_t bus_volt_10mv = PWR_INVALID_VOLTAGE;
+        if(PWR_MONITORING_STATUS_OK != PWR_GetBusVoltage(&bus_volt_10mv)){
+            ESP_LOGI(TAG, "Failed to get bus voltage");
+        }
+        else{
+            //process new Vbus voltage
+        
+        }
+
         xSemaphoreGive(alarm_mutex_handle);
 
     }
@@ -89,22 +126,28 @@ static void tAlarmTask(void *pvParameters){
 /******************************************************************************
 *   Public Functions Definitions
 *******************************************************************************/
-ALARM_Ret_t ALARM_InitController(AlarmMonitoring_t monitoring_func,
-                                 AlarmStatusCallback_t callback){
+ALARM_Ret_t ALARM_InitController(ALARM_Temp_Config_t *pTemp_cfg,
+                                 ALARM_Volt_Config_t *pVolt_cfg,
+                                 AlarmStateCallback_t callback){
 
-    if(monitoring_func == NULL){
+    if(pTemp_cfg == NULL || pVolt_cfg == NULL || callback == NULL){
         ESP_LOGI(TAG, "Failed to init controller: Invalid params");
         return ALARM_STATUS_ERROR;
     }
+
+    //Init alarm thresholds and releases levels
+    temp_threshold = pTemp_cfg->temp_threshold_10mC;
+    temp_release = pTemp_cfg->temp_release_10mc;
+    volt_threshold = pVolt_cfg->volt_threshold_10mv;
+    volt_release = pVolt_cfg->volt_release_10mv;
+
+    //Register callback
+    alarm_callback = callback;
 
     //Init alarms states
     for(uint8_t i=0; i<ALARM_NUMBER_SRC; i++){
         alarm_state[i] = ALARM_STATE_INACTIVE;
     }
-
-    //Register callback and monitoring functions
-    alarm_callback = callback;
-    monitoring_alarm = monitoring_func;
 
     //Create alarm mutex
     alarm_mutex_handle = xSemaphoreCreateMutex();
@@ -137,6 +180,52 @@ ALARM_Ret_t ALARM_GetState(ALARM_Src_t src, ALARM_State_t *pState){
 
     xSemaphoreTake(alarm_mutex_handle, portMAX_DELAY);
     *pState = alarm_state[src];
+    xSemaphoreGive(alarm_mutex_handle);
+
+    return ALARM_STATUS_OK;
+}
+
+ALARM_Ret_t ALARM_SetTempLevel(ALARM_Temp_Config_t *pTemp_cfg){
+
+    xSemaphoreTake(alarm_mutex_handle, portMAX_DELAY);
+    temp_threshold = pTemp_cfg->temp_threshold_10mC;
+    temp_release = pTemp_cfg->temp_release_10mc;
+    xSemaphoreGive(alarm_mutex_handle);
+
+    return ALARM_STATUS_OK;
+}
+
+ALARM_Ret_t ALARM_GetTempLevel(ALARM_Temp_Config_t *pTemp_cfg){
+
+    if(pTemp_cfg == NULL)   return ALARM_STATUS_ERROR;
+
+    xSemaphoreTake(alarm_mutex_handle, portMAX_DELAY);
+    pTemp_cfg->temp_threshold_10mC = temp_threshold;
+    pTemp_cfg->temp_release_10mc = temp_release;
+    xSemaphoreGive(alarm_mutex_handle);
+
+    return ALARM_STATUS_OK;
+}
+
+ALARM_Ret_t ALARM_SetVoltLevel(ALARM_Volt_Config_t *pVolt_cfg){
+
+    if(pVolt_cfg == NULL)   return ALARM_STATUS_ERROR;
+
+    xSemaphoreTake(alarm_mutex_handle, portMAX_DELAY); 
+    volt_threshold = pVolt_cfg->volt_threshold_10mv;
+    volt_release = pVolt_cfg->volt_release_10mv;
+    xSemaphoreGive(alarm_mutex_handle);
+
+    return ALARM_STATUS_OK;
+}
+
+ALARM_Ret_t ALARM_GetVoltLevel(ALARM_Volt_Config_t *pVolt_cfg){
+
+    if(pVolt_cfg == NULL)   return ALARM_STATUS_ERROR;
+
+    xSemaphoreTake(alarm_mutex_handle, portMAX_DELAY);
+    pVolt_cfg->volt_threshold_10mv = volt_threshold;
+    pVolt_cfg->volt_release_10mv = volt_release;
     xSemaphoreGive(alarm_mutex_handle);
 
     return ALARM_STATUS_OK;
