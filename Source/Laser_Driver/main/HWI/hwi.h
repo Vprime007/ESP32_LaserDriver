@@ -7,20 +7,28 @@
 #define HWI_TRIGGER_IN              (8)
 
 #define HWI_LCD_SCL_GPIO            (11)
-#define HWI_LCD_SDA_GPIO            (12)
+#define HWI_LCD_SDA_GPIO            (10)
 
 #define HWI_BTN_P_GPIO              (13)
 #define HWI_BTN_M_GPIO              (14)
-#define HWI_BTN_SELECT_GPIO         (15)
-#define HWI_USER_LED_GPIO           (16)
+#define HWI_BTN_SELECT_GPIO         (21)
+#define HWI_USER_LED_GPIO           (12)
 
 #define HWI_PA_DIM_GPIO             (18)
-#define HWI_PB_DIM_GPIO             (21)
+#define HWI_PB_DIM_GPIO             (17)
 
 #define HWI_SENSOR_EN_GPIO          (41)
 #define HWI_PHASE_EN_GPIO           (42)
 #define HWI_PHASE_FAN_GPIO          (45)
 #define HWI_LOAD_FAN_GPIO           (46)
+
+#define HWI_LOAD_TEMP               (1)
+#define HWI_VREF                    (2)
+#define HWI_PB_I_IN                 (3)
+#define HWI_PA_I_IN                 (4)
+#define HWI_PA_TEMP                 (5)
+#define HWI_PB_TEMP                 (6)
+#define HWI_BUS_VOLT_IN             (7)
 
 /******************************************************************************
 *   Public Macros

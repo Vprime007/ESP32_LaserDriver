@@ -62,6 +62,20 @@ static const char * TAG = "ALARM";
 /******************************************************************************
 *   Private Functions Definitions
 *******************************************************************************/
+/***************************************************************************//*!
+*  \brief Alarm controller task.
+*
+*   This function is the alarm controller task.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  pvParameters            User parameters.
+*
+*   \return     None.
+*
+*******************************************************************************/
 static void tAlarmTask(void *pvParameters){
 
     ESP_LOGI(TAG, "Starting Alarm task");
@@ -79,7 +93,7 @@ static void tAlarmTask(void *pvParameters){
         }
         else{
             //Process load temp value
-        
+            
         } 
 
         //Get phase A temp value
@@ -126,6 +140,23 @@ static void tAlarmTask(void *pvParameters){
 /******************************************************************************
 *   Public Functions Definitions
 *******************************************************************************/
+/***************************************************************************//*!
+*  \brief Alarm Controller initialization.
+*
+*   This function is used to initialize the alarm controller module.
+*   The callback function will be called when a alarm state change occur.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  pTemp_cfg           Pointer to the temp configuration.
+*   \param[in]  pVolt_cfg           Pointer to the volt configuration.
+*   \param[in]  callback            Alarm state change callback.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
 ALARM_Ret_t ALARM_InitController(ALARM_Temp_Config_t *pTemp_cfg,
                                  ALARM_Volt_Config_t *pVolt_cfg,
                                  AlarmStateCallback_t callback){
@@ -171,6 +202,21 @@ ALARM_Ret_t ALARM_InitController(ALARM_Temp_Config_t *pTemp_cfg,
     return ALARM_STATUS_OK;
 }
 
+/***************************************************************************//*!
+*  \brief Get alarm state.
+*
+*   This function is used to get the current state of an alarm.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  src                 Alarm source.
+*   \param[out] pState              Pointer to store the state.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
 ALARM_Ret_t ALARM_GetState(ALARM_Src_t src, ALARM_State_t *pState){
 
     if(src >= ALARM_SRC_INVALID || pState == NULL){
@@ -185,6 +231,21 @@ ALARM_Ret_t ALARM_GetState(ALARM_Src_t src, ALARM_State_t *pState){
     return ALARM_STATUS_OK;
 }
 
+/***************************************************************************//*!
+*  \brief Set temperature alarm level.
+*
+*   This function is used to set the temperature threshold and 
+*   release level.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  pTemp_cfg           Pointer to the temperature config.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
 ALARM_Ret_t ALARM_SetTempLevel(ALARM_Temp_Config_t *pTemp_cfg){
 
     xSemaphoreTake(alarm_mutex_handle, portMAX_DELAY);
@@ -195,6 +256,21 @@ ALARM_Ret_t ALARM_SetTempLevel(ALARM_Temp_Config_t *pTemp_cfg){
     return ALARM_STATUS_OK;
 }
 
+/***************************************************************************//*!
+*  \brief Get temperature alarm level.
+*
+*   This function is used to get the temperature threshold and 
+*   release level.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  pTemp_cfg           Pointer to store the temperature config.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
 ALARM_Ret_t ALARM_GetTempLevel(ALARM_Temp_Config_t *pTemp_cfg){
 
     if(pTemp_cfg == NULL)   return ALARM_STATUS_ERROR;
@@ -207,6 +283,21 @@ ALARM_Ret_t ALARM_GetTempLevel(ALARM_Temp_Config_t *pTemp_cfg){
     return ALARM_STATUS_OK;
 }
 
+/***************************************************************************//*!
+*  \brief Set voltage level.
+*
+*   This function is used to set the voltage threshold and 
+*   release level.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  pTemp_cfg           Pointer to the voltage config.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
 ALARM_Ret_t ALARM_SetVoltLevel(ALARM_Volt_Config_t *pVolt_cfg){
 
     if(pVolt_cfg == NULL)   return ALARM_STATUS_ERROR;
@@ -219,6 +310,21 @@ ALARM_Ret_t ALARM_SetVoltLevel(ALARM_Volt_Config_t *pVolt_cfg){
     return ALARM_STATUS_OK;
 }
 
+/***************************************************************************//*!
+*  \brief Get voltage alarm level.
+*
+*   This function is used to get the voltage threshold and 
+*   release level.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  pTemp_cfg           Pointer to store the voltage config.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
 ALARM_Ret_t ALARM_GetVoltLevel(ALARM_Volt_Config_t *pVolt_cfg){
 
     if(pVolt_cfg == NULL)   return ALARM_STATUS_ERROR;

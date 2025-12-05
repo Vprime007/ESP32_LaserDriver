@@ -20,6 +20,8 @@ idf_component_register(
                     
                     "Alarm/alarmController.c"
 
+                    "ThermalManagement/thermalManagement.c"
+
     PRIV_REQUIRES   spi_flash
                     driver
                     
@@ -31,6 +33,7 @@ idf_component_register(
                     "HWI"
                     "Sensors"
                     "Alarm"
+                    "ThermalManagement"
 )
 
 component_compile_options(-Wno-error=format= -Wno-format)
