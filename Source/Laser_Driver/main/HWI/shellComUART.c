@@ -196,11 +196,11 @@ SHCOM_Ret_t SHCOM_InitCom(SHCOM_Config_t *pConfig){
 *	\return		Operation status.
 *
 *******************************************************************************/
-SHCOM_Ret_t SHCOM_PrintCharacter(char c){
+int32_t SHCOM_PrintCharacter(char c){
 
     uart_write_bytes(uart_port, &c, 1);
 
-    return SHCOM_STATUS_OK;
+    return (int32_t)(SHCOM_STATUS_OK);
 }
 
 /******************************************************************************

@@ -69,6 +69,6 @@ SHCOM_Ret_t SHCOM_InitCom(SHCOM_Config_t *pConfig);
 *	\return		Operation status.
 *
 *******************************************************************************/
-SHCOM_Ret_t SHCOM_PrintCharacter(char c);
+int32_t SHCOM_PrintCharacter(char c);
 
 #endif//__SHELL_COM_UART_H

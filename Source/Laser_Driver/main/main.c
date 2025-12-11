@@ -19,6 +19,8 @@
 
 #include "hwi.h"
 #include "taskPriority.h"
+#include "shellComUART.h"
+#include "myShell.h"
 
 /******************************************************************************
 *   Private Definitions
@@ -71,6 +73,23 @@ static const char * TAG = "MAIN";
 static void tMainTask(void *pvParameters){
 
     ESP_LOGI(TAG, "Starting Main task");
+
+    //Init myShell com.
+    SHCOM_Config_t shell_cfg = {
+        .baudrate = 115200,
+        .port = UART_NUM_0,
+        .rx_gpio = HWI_SHELL_RX_GPIO,
+        .tx_gpio = HWI_SHELL_TX_GPIO,
+    };
+    if(SHCOM_STATUS_OK != SHCOM_InitCom(&shell_cfg)){
+
+        ESP_LOGW(TAG, "Failed to init Shell Com");
+    }
+
+    //Init myShell
+    if(SHELL_STATUS_OK != SHELL_Init(SHCOM_PrintCharacter)){
+        ESP_LOGW(TAG, "Failed to init myShell");
+    }
 
     for(;;){
 

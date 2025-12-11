@@ -27,7 +27,6 @@ typedef enum ALARM_Src_e{
     ALARM_SRC_INVALID = ALARM_NUMBER_SRC,
 }ALARM_Src_t;
 
-
 typedef struct ALARM_Temp_Config_s{
     int16_t temp_threshold_10mC;
     int16_t temp_release_10mc;

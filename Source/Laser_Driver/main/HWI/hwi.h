@@ -9,6 +9,9 @@
 #define HWI_LCD_SCL_GPIO            (11)
 #define HWI_LCD_SDA_GPIO            (10)
 
+#define HWI_SHELL_TX_GPIO           (43)
+#define HWI_SHELL_RX_GPIO           (44)
+
 #define HWI_BTN_P_GPIO              (13)
 #define HWI_BTN_M_GPIO              (14)
 #define HWI_BTN_SELECT_GPIO         (21)
