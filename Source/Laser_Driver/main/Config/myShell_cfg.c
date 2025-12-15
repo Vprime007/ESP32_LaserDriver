@@ -34,7 +34,8 @@
 *   Private Functions Declaration
 *******************************************************************************/
 static int32_t shellSetPhaseActiveDuty(int32_t argc, char *argv[]);
-static int32_t shellSetPhaseInactiveDuty(int32_t argc, char *argv[]);
+static int32_t shellEnableAllPhase(int32_t argc, char *argv[]);
+static int32_t shellDisableAllPhase(int32_t argc, char *argv[]);
 static int32_t shellEnablePhase(int32_t argc, char *argv[]);
 static int32_t shellDisablePhase(int32_t argc, char *argv[]);
 static int32_t shellSetPhaseOvt(int32_t argc, char *argv[]);
@@ -58,8 +59,10 @@ static void shellResultError(int32_t error);
 static SHELL_Command_t shell_cmd_table[] = {
     {"help", SHELL_HelpHandler, "Lists all commands"},
     {"set-dimming", shellSetPhaseActiveDuty, "Set ON duty-cyle (in percent)"},
-    {"enable-phase", shellEnablePhase, "Enable phases outputs"},
-    {"disable-phase", shellDisablePhase, "Disable phases outputs"},
+    {"enable-all-phase", shellEnableAllPhase, "Enable All phases outputs"},
+    {"disable-all-phase", shellDisableAllPhase, "Disable All phases outputs"},
+    {"enable-phase", shellEnablePhase, "Enable phase output"},
+    {"disable-phase", shellDisablePhase, "Disable phase output"},
     {"set-phase-ovt", shellSetPhaseOvt, "Set phases OVT threshold (in *C)"},
     {"set-load-ovt", shellSetLoadOvt, "Set Load OVT threshold (in *C)"},
     {"get-temp", shellGetTemperature, "Get temperature values (in *C)"},
@@ -113,9 +116,9 @@ static int32_t shellSetPhaseActiveDuty(int32_t argc, char *argv[]){
 }
 
 /***************************************************************************//*!
-*  \brief   Shell enable phase
+*  \brief   Shell enable all phases
 *
-*   Shell cmd to enable Phases.
+*   Shell cmd to enable all phases.
 *   
 *   Preconditions: None.
 *
@@ -127,7 +130,7 @@ static int32_t shellSetPhaseActiveDuty(int32_t argc, char *argv[]){
 *   \return     Operation status
 *
 *******************************************************************************/
-static int32_t shellEnablePhase(int32_t argc, char *argv[]){
+static int32_t shellEnableAllPhase(int32_t argc, char *argv[]){
 
     if(LASER_STATUS_OK != LASER_SetAllPhaseActive()){
         
@@ -141,9 +144,87 @@ static int32_t shellEnablePhase(int32_t argc, char *argv[]){
 }
 
 /***************************************************************************//*!
+*  \brief   Shell disable all phases
+*
+*   Shell cmd to disable all phases.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  argc                    Number of arguments.
+*   \param[in]  argv                    Arguments tables.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
+static int32_t shellDisableAllPhase(int32_t argc, char *argv[]){
+
+    if(LASER_STATUS_OK != LASER_SetAllPhaseInactive()){
+
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    shellResultSuccess();
+
+    return SHELL_ERR_NO_ERROR;
+}
+
+/***************************************************************************//*!
+*  \brief   Shell enable phase
+*
+*   Shell cmd to enable target phase.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  argc                    Number of arguments.
+*   \param[in]  argv                    Arguments tables.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
+static int32_t shellEnablePhase(int32_t argc, char *argv[]){
+
+    if(argc < 2){
+
+        shellResultError(SHELL_ERR_PAYLOAD);
+        return SHELL_ERR_PAYLOAD;
+    }
+
+    if((0 == strcmp("PHASE_A", argv[1])) || (0 == strcmp("phase_a", argv[1]))){
+        
+        if(LASER_STATUS_OK != LASER_SetPhaseActive(LASER_PHASE_A)){
+
+            shellResultError(SHELL_ERR_PARAMS);
+            return SHELL_ERR_PARAMS;
+        }
+    }
+    else if((0 == strcmp("PHASE_B", argv[1])) || (0 == strcmp("phase_b", argv[1]))){
+
+        if(LASER_STATUS_OK != LASER_SetPhaseActive(LASER_PHASE_B)){
+
+            shellResultError(SHELL_ERR_PARAMS);
+            return SHELL_ERR_PARAMS;
+        }
+    }
+    else{
+
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    shellResultSuccess();
+
+    return SHELL_ERR_NO_ERROR;
+}
+
+/***************************************************************************//*!
 *  \brief   Shell disable phase
 *
-*   Shell cmd to disable Phases.
+*   Shell cmd to disable target phase.
 *   
 *   Preconditions: None.
 *
@@ -157,13 +238,33 @@ static int32_t shellEnablePhase(int32_t argc, char *argv[]){
 *******************************************************************************/
 static int32_t shellDisablePhase(int32_t argc, char *argv[]){
 
-    if(LASER_STATUS_OK != LASER_SetAllPhaseInactive()){
+    if(argc < 2){
+
+        shellResultError(SHELL_ERR_PAYLOAD);
+        return SHELL_ERR_PAYLOAD;
+    }
+
+    if((0 == strcmp("PHASE_A", argv[1])) || (0 == strcmp("phase_a", argv[1]))){
+
+        if(LASER_STATUS_OK != LASER_SetPhaseInactive(LASER_PHASE_A)){
+
+            shellResultError(SHELL_ERR_PARAMS);
+            return SHELL_ERR_PARAMS;
+        }
+    }
+    else if((0 == strcmp("PHASE_B", argv[1])) || (0 == strcmp("phase_b", argv[1]))){
+
+        if(LASER_STATUS_OK != LASER_SetPhaseInactive(LASER_PHASE_B)){
+
+            shellResultError(SHELL_ERR_PARAMS);
+            return SHELL_ERR_PARAMS;
+        }
+    }
+    else{
 
         shellResultError(SHELL_ERR_PARAMS);
         return SHELL_ERR_PARAMS;
     }
-
-    shellResultSuccess();
 
     return SHELL_ERR_NO_ERROR;
 }
