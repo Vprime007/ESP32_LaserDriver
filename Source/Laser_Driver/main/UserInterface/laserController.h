@@ -17,6 +17,13 @@
 /******************************************************************************
 *   Public Data Types
 *******************************************************************************/
+typedef enum LASER_Phase_e{
+    LASER_PHASE_A,
+    LASER_PHASE_B,
+    
+    LASER_PHASE_INVALID,
+}LASER_Phase_t;
+
 typedef enum LASER_State_e{
     LASER_STATE_INACTIVE,
     LASER_STATE_ACTIVE,
@@ -58,6 +65,87 @@ typedef enum LASER_Ret_e{
 LASER_Ret_t LASER_InitController(void);
 
 /***************************************************************************//*!
+*  \brief Set laser active
+*
+*   This function activate both laser phases and set the pwms duty-cycles to the
+*   active percent value. 
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \return         Operation status
+*
+*******************************************************************************/
+LASER_Ret_t LASER_SetAllPhaseActive(void);
+
+/***************************************************************************//*!
+*  \brief Set laser inactive.
+*
+*   This function disable both laser phases and set the pwms duty-cycles to the
+*   minimum allowed.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \return         Operation status
+*
+*******************************************************************************/
+LASER_Ret_t LASER_SetAllPhaseInactive(void);
+
+/***************************************************************************//*!
+*  \brief Set laser phase active.
+*
+*   This function enable target laser phase and set the pwms duty-cycles to the
+*   maximum allowed.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]      phase               Laser phase.             
+*
+*   \return         Operation status
+*
+*******************************************************************************/
+LASER_Ret_t LASER_SetPhaseActive(LASER_Phase_t phase);
+
+/***************************************************************************//*!
+*  \brief Set laser phase inactive.
+*
+*   This function disable target laser phase and set the pwms duty-cycles to the
+*   minimum allowed.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]      phase               Laser phase.             
+*
+*   \return         Operation status
+*
+*******************************************************************************/
+LASER_Ret_t LASER_SetPhaseInactive(LASER_Phase_t phase);
+
+/***************************************************************************//*!
+*  \brief Get laser state.
+*
+*   This function is used to get the current lasers state (Active/Inactive).
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]      phase                   Laser phase.
+*   \param[out]     pState                  Pointer to store state.
+*
+*   \return         Operation status
+*
+*******************************************************************************/
+LASER_Ret_t LASER_GetState(LASER_Phase_t phase, LASER_State_t *pState);
+
+/***************************************************************************//*!
 *  \brief Set laser active percentage.
 *
 *   This function is used to set the Active state fade duty-cycle in percent.
@@ -74,52 +162,6 @@ LASER_Ret_t LASER_InitController(void);
 *
 *******************************************************************************/
 LASER_Ret_t LASER_SetActivePercent(uint16_t percent);
-
-/***************************************************************************//*!
-*  \brief Set laser active
-*
-*   This function activate both laser phases and set the pwms duty-cycles to the
-*   active percent value. 
-*   
-*   Preconditions: None.
-*
-*   Side Effects: None.
-*
-*   \return         Operation status
-*
-*******************************************************************************/
-LASER_Ret_t LASER_SetActive(void);
-
-/***************************************************************************//*!
-*  \brief Set laser inactive.
-*
-*   This function disable both laser phases and set the pwms duty-cycles to the
-*   minimum allowed.
-*   
-*   Preconditions: None.
-*
-*   Side Effects: None.
-*
-*   \return         Operation status
-*
-*******************************************************************************/
-LASER_Ret_t LASER_SetInactive(void);
-
-/***************************************************************************//*!
-*  \brief Get laser state.
-*
-*   This function is used to get the current lasers state (Active/Inactive).
-*   
-*   Preconditions: None.
-*
-*   Side Effects: None.
-*
-*   \param[out]     pState                  Pointer to store state.
-*
-*   \return         Operation status
-*
-*******************************************************************************/
-LASER_Ret_t LASER_GetState(LASER_State_t *pState);
 
 /***************************************************************************//*!
 *  \brief Get Active persent.

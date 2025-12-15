@@ -21,6 +21,7 @@
 #include "taskPriority.h"
 #include "shellComUART.h"
 #include "myShell.h"
+#include "laserController.h"
 
 /******************************************************************************
 *   Private Definitions
@@ -73,6 +74,13 @@ static const char * TAG = "MAIN";
 static void tMainTask(void *pvParameters){
 
     ESP_LOGI(TAG, "Starting Main task");
+
+    //Init laser controller
+    if(LASER_STATUS_OK != LASER_InitController()){
+        ESP_LOGW(TAG, "Failed to init laser controller");
+    }
+    //Turn laser OFF
+    LASER_SetAllPhaseInactive();
 
     //Init myShell com.
     SHCOM_Config_t shell_cfg = {
@@ -136,7 +144,7 @@ void app_main(void){
     //create main task
     if(pdTRUE != xTaskCreate(tMainTask,
                              "Main task",
-                             2048,
+                             2*2048,
                              NULL,
                              MAIN_TASK_PRIORITY,
                              &main_task_handle)){

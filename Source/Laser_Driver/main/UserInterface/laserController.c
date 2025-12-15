@@ -39,8 +39,12 @@
 *******************************************************************************/
 static SemaphoreHandle_t laser_mutex_handle = NULL;
 
-static LASER_State_t laser_state = LASER_STATE_INVALID;
-static uint16_t active_percent = LASER_MIN_PERCENT;
+//static LASER_State_t laser_state = LASER_STATE_INVALID;
+
+static LASER_State_t phase_a_state = LASER_STATE_INVALID;
+static LASER_State_t phase_b_state = LASER_STATE_INVALID;
+
+static uint16_t active_percent = LASER_MAX_PERCENT;
 static LED_Handle_t pa_laser_handle;
 static LED_Handle_t pb_laser_handle;
 
@@ -110,6 +114,9 @@ LASER_Ret_t LASER_InitController(void){
     LDRV_SetLedSinglePwmDuty(PERCENT_TO_DUTY(LDRV_CFG_MIN_PWM_DUTY), 
                              pb_laser_handle);
 
+    phase_a_state = LASER_STATE_INACTIVE;
+    phase_b_state = LASER_STATE_INACTIVE;
+
     return LASER_STATUS_OK;
 }
 
@@ -144,15 +151,19 @@ LASER_Ret_t LASER_SetActivePercent(uint16_t percent){
     xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
     active_percent = percent;//Update active percent value
     //If laser is in active state -> update pwm duty now
-    if(laser_state == LASER_STATE_ACTIVE){
+
+    if(phase_a_state == LASER_STATE_ACTIVE){
         //Set new duty-cycle
         if(LDRV_STATUS_OK != LDRV_SetLedSinglePwmDuty(PERCENT_TO_DUTY(percent), 
                                                       pa_laser_handle)){
             xSemaphoreGive(laser_mutex_handle);
             return LASER_STATUS_ERROR;
         }
+    }
 
-        if(LDRV_STATUS_OK != LDRV_SetLedSinglePwmDuty(PERCENT_TO_DUTY(percent), 
+    if(phase_b_state == LASER_STATE_ACTIVE){
+        //Set new duty-cycle
+            if(LDRV_STATUS_OK != LDRV_SetLedSinglePwmDuty(PERCENT_TO_DUTY(percent), 
                                                       pb_laser_handle)){
             xSemaphoreGive(laser_mutex_handle);
             return LASER_STATUS_ERROR;
@@ -176,22 +187,24 @@ LASER_Ret_t LASER_SetActivePercent(uint16_t percent){
 *   \return         Operation status
 *
 *******************************************************************************/
-LASER_Ret_t LASER_SetActive(void){
+LASER_Ret_t LASER_SetAllPhaseActive(void){
 
     if(laser_mutex_handle == NULL){
         ESP_LOGE(TAG, "Laser controller not initialized");
         return LASER_STATUS_ERROR;
     }
 
-    LASER_State_t current_state = LASER_STATE_INVALID;
+    LASER_State_t current_phase_a = LASER_STATE_INVALID;
+    LASER_State_t current_phase_b = LASER_STATE_INVALID;
     xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
-    current_state = laser_state;
+    current_phase_a = phase_a_state;
+    current_phase_b = phase_b_state;
     xSemaphoreGive(laser_mutex_handle);
 
     //Check if laser is not already active
-    if(current_state != LASER_STATE_ACTIVE){
+    if(current_phase_a != LASER_STATE_ACTIVE){
         xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
-        laser_state = LASER_STATE_ACTIVE;//Update state
+        phase_a_state = LASER_STATE_ACTIVE;//Update state
 
         //Apply active percent duty-cycle
         if(LDRV_STATUS_OK != LDRV_SetLedSinglePwmDuty(PERCENT_TO_DUTY(active_percent), 
@@ -200,8 +213,17 @@ LASER_Ret_t LASER_SetActive(void){
             return LASER_STATUS_ERROR;
         }
 
-        if(LDRV_STATUS_OK != LDRV_SetLedSinglePwmDuty(PERCENT_TO_DUTY(active_percent), 
+        xSemaphoreGive(laser_mutex_handle);
+    }
+
+    if(current_phase_b!= LASER_STATE_ACTIVE){
+        xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
+        phase_b_state = LASER_STATE_ACTIVE;
+
+        //Apply active percent duty-cycle
+        if(LDRV_STATUS_OK != LDRV_SetLedSinglePwmDuty(PERCENT_TO_DUTY(active_percent),
                                                       pb_laser_handle)){
+
             xSemaphoreGive(laser_mutex_handle);
             return LASER_STATUS_ERROR;
         }
@@ -225,22 +247,24 @@ LASER_Ret_t LASER_SetActive(void){
 *   \return         Operation status
 *
 *******************************************************************************/
-LASER_Ret_t LASER_SetInactive(void){
+LASER_Ret_t LASER_SetAllPhaseInactive(void){
 
     if(laser_mutex_handle == NULL){
         ESP_LOGE(TAG, "Laser controller not initialized");
         return LASER_STATUS_ERROR;
     }
 
-    LASER_State_t current_state = LASER_STATE_INVALID;
+    LASER_State_t current_phase_a = LASER_STATE_INVALID;
+    LASER_State_t current_phase_b = LASER_STATE_INVALID;
     xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
-    current_state = laser_state;
+    current_phase_a = phase_a_state;
+    current_phase_b = phase_b_state;
     xSemaphoreGive(laser_mutex_handle);
 
     //Check if laser is not already inactive
-    if(current_state != LASER_STATE_INACTIVE){
+    if(current_phase_a != LASER_STATE_INACTIVE){
         xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
-        laser_state = LASER_STATE_INACTIVE;//Update state
+        phase_a_state = LASER_STATE_INACTIVE;//Update state
 
         //Apply min percent duty-cycle
         if(LDRV_STATUS_OK != LDRV_SetLedSinglePwmDuty(PERCENT_TO_DUTY(LASER_MIN_PERCENT), 
@@ -248,14 +272,156 @@ LASER_Ret_t LASER_SetInactive(void){
             xSemaphoreGive(laser_mutex_handle);
             return LASER_STATUS_ERROR;
         }
+    }
 
-        if(LDRV_STATUS_OK != LDRV_SetLedSinglePwmDuty(PERCENT_TO_DUTY(LASER_MIN_PERCENT), 
+    if(current_phase_b != LASER_STATE_INACTIVE){
+        xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
+
+        phase_b_state = LASER_STATE_INACTIVE;
+
+        //Apply min percent duty
+        if(LDRV_STATUS_OK != LDRV_SetLedSinglePwmDuty(PERCENT_TO_DUTY(LASER_MIN_PERCENT),
                                                       pb_laser_handle)){
+
             xSemaphoreGive(laser_mutex_handle);
             return LASER_STATUS_ERROR;
         }
+
         xSemaphoreGive(laser_mutex_handle);
     }
+
+    return LASER_STATUS_OK;
+}
+
+
+/***************************************************************************//*!
+*  \brief Set laser phase active.
+*
+*   This function enable target laser phase and set the pwms duty-cycles to the
+*   maximum allowed.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]      phase               Laser phase.             
+*
+*   \return         Operation status
+*
+*******************************************************************************/
+LASER_Ret_t LASER_SetPhaseActive(LASER_Phase_t phase){
+
+    if(phase >= LASER_PHASE_INVALID){
+        ESP_LOGI(TAG, "Failed to enable phase: Invalid params");
+        return LASER_STATUS_ERROR;
+    }
+
+    xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
+    switch(phase){
+        case LASER_PHASE_A:
+        {
+            if(phase_a_state != LASER_STATE_ACTIVE){
+                phase_a_state = LASER_STATE_ACTIVE;
+
+                //Apply active percent duty-cycle
+                if(LDRV_STATUS_OK != LDRV_SetLedSinglePwmDuty(PERCENT_TO_DUTY(active_percent), 
+                                                              pa_laser_handle)){
+                    xSemaphoreGive(laser_mutex_handle);
+                    return LASER_STATUS_ERROR;
+                }
+            }
+        }
+        break;
+
+        case LASER_PHASE_B:
+        {
+            if(phase_b_state != LASER_STATE_ACTIVE){
+                phase_b_state = LASER_STATE_ACTIVE;
+
+                //Apply active percent duty-cycle
+                if(LDRV_STATUS_OK != LDRV_SetLedSinglePwmDuty(PERCENT_TO_DUTY(active_percent), 
+                                                              pb_laser_handle)){
+                    xSemaphoreGive(laser_mutex_handle);
+                    return LASER_STATUS_ERROR;
+                }
+            }
+        }
+        break;
+
+        default:
+        {
+            //Not supposed to be here
+        }
+        break;
+    }
+    xSemaphoreGive(laser_mutex_handle);
+
+    return LASER_STATUS_OK;
+}
+
+/***************************************************************************//*!
+*  \brief Set laser phase inactive.
+*
+*   This function disable target laser phase and set the pwms duty-cycles to the
+*   minimum allowed.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]      phase               Laser phase.             
+*
+*   \return         Operation status
+*
+*******************************************************************************/
+LASER_Ret_t LASER_SetPhaseInactive(LASER_Phase_t phase){
+
+    if(phase >= LASER_PHASE_INVALID){
+        ESP_LOGI(TAG, "Failed to disable phase: Invalid params");
+        return LASER_STATUS_ERROR;
+    }
+
+    xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
+    switch(phase){
+        case LASER_PHASE_A:
+        {
+            if(phase_a_state != LASER_STATE_INACTIVE){
+                phase_a_state = LASER_STATE_INACTIVE;
+
+                //Apply min percent duty-cycle
+                if(LDRV_STATUS_OK != LDRV_SetLedSinglePwmDuty(PERCENT_TO_DUTY(LASER_MIN_PERCENT), 
+                                                              pa_laser_handle)){
+                    xSemaphoreGive(laser_mutex_handle);
+                    return LASER_STATUS_ERROR;
+                }
+            }
+        }
+        break;
+
+        case LASER_PHASE_B:
+        {
+            if(phase_b_state != LASER_STATE_INACTIVE){
+                phase_b_state = LASER_STATE_INACTIVE;
+
+                //Apply min percent duty-cycle
+                if(LDRV_STATUS_OK != LDRV_SetLedSinglePwmDuty(PERCENT_TO_DUTY(LASER_MIN_PERCENT), 
+                                                              pb_laser_handle)){
+                    xSemaphoreGive(laser_mutex_handle);
+                    return LASER_STATUS_ERROR;
+                }
+            }
+        }
+        break;
+
+        default:
+        {
+            //Not supposed to be here...
+        }
+        break;
+    }
+
+
+    xSemaphoreGive(laser_mutex_handle);
 
     return LASER_STATUS_OK;
 }
@@ -269,25 +435,44 @@ LASER_Ret_t LASER_SetInactive(void){
 *
 *   Side Effects: None.
 *
+*   \param[in]      phase                   Laser phase.
 *   \param[out]     pState                  Pointer to store state.
 *
 *   \return         Operation status
 *
 *******************************************************************************/
-LASER_Ret_t LASER_GetState(LASER_State_t *pState){
+LASER_Ret_t LASER_GetState(LASER_Phase_t phase, LASER_State_t *pState){
 
     if(laser_mutex_handle == NULL){
         ESP_LOGE(TAG, "Laser controller not initialized");
         return LASER_STATUS_ERROR;
     }
 
-    if(pState == NULL){
+    if((pState == NULL) || (phase >= LASER_PHASE_INVALID)){
         ESP_LOGI(TAG, "Invalid params");
         return LASER_STATUS_ERROR;
     }
 
     xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
-    *pState = laser_state;
+    switch(phase){
+        case LASER_PHASE_A:
+        {
+            *pState = phase_a_state;
+        }
+        break;
+
+        case LASER_PHASE_B:
+        {
+            *pState = phase_b_state;
+        }
+        break;
+
+        default:
+        {
+            //Not suppose to be here...
+        }
+        break;
+    }
     xSemaphoreGive(laser_mutex_handle);
 
     return LASER_STATUS_OK;

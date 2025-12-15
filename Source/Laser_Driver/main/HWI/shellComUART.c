@@ -141,11 +141,11 @@ SHCOM_Ret_t SHCOM_InitCom(SHCOM_Config_t *pConfig){
     };
 
     if(ESP_OK != uart_driver_install(pConfig->port,
-                                     2*UART_HW_FIFO_LEN(pConfig->port),
-                                     2*UART_HW_FIFO_LEN(pConfig->port),
+                                     2*1024,
+                                     2*1024,
                                      UART_EVENT_QUEUE_SIZE,
                                      &uart_event_queue_handle,
-                                     0)){
+                                     ESP_INTR_FLAG_IRAM)){
 
         return SHCOM_STATUS_ERROR;
     }

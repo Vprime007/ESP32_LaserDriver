@@ -57,8 +57,7 @@ static void shellResultError(int32_t error);
 //The table should minimally contain the 'help' function.
 static SHELL_Command_t shell_cmd_table[] = {
     {"help", SHELL_HelpHandler, "Lists all commands"},
-    {"set-active-duty", shellSetPhaseActiveDuty, "Set ON duty-cyle (in percent)"},
-    {"set-idle-duty", shellSetPhaseInactiveDuty, "Set OFF duty-cycl (in percent)"},
+    {"set-dimming", shellSetPhaseActiveDuty, "Set ON duty-cyle (in percent)"},
     {"enable-phase", shellEnablePhase, "Enable phases outputs"},
     {"disable-phase", shellDisablePhase, "Disable phases outputs"},
     {"set-phase-ovt", shellSetPhaseOvt, "Set phases OVT threshold (in *C)"},
@@ -102,36 +101,7 @@ static int32_t shellSetPhaseActiveDuty(int32_t argc, char *argv[]){
         return SHELL_ERR_PARAMS;
     }
 
-    shellResultSuccess();
-
-    return SHELL_ERR_NO_ERROR;
-}
-
-/***************************************************************************//*!
-*  \brief   Shell Set phase inactive duty.
-*
-*   Shell cmd to set Phase inactive duty cycle.
-*   
-*   Preconditions: None.
-*
-*   Side Effects: None.
-*
-*   \param[in]  argc                    Number of arguments.
-*   \param[in]  argv                    Arguments tables.
-*
-*   \return     Operation status
-*
-*******************************************************************************/
-static int32_t shellSetPhaseInactiveDuty(int32_t argc, char *argv[]){
-
-    if(argc < 2){
-
-        shellResultError(SHELL_ERR_PAYLOAD);
-        return SHELL_ERR_PAYLOAD;
-    }
-
-    uint16_t active_duty = strtoul(argv[1], NULL, 10);
-    if(active_duty > 10000){
+    if(LASER_STATUS_OK != LASER_SetActivePercent(active_duty)){
 
         shellResultError(SHELL_ERR_PARAMS);
         return SHELL_ERR_PARAMS;
@@ -159,6 +129,12 @@ static int32_t shellSetPhaseInactiveDuty(int32_t argc, char *argv[]){
 *******************************************************************************/
 static int32_t shellEnablePhase(int32_t argc, char *argv[]){
 
+    if(LASER_STATUS_OK != LASER_SetAllPhaseActive()){
+        
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
     shellResultSuccess();
 
     return SHELL_ERR_NO_ERROR;
@@ -180,6 +156,12 @@ static int32_t shellEnablePhase(int32_t argc, char *argv[]){
 *
 *******************************************************************************/
 static int32_t shellDisablePhase(int32_t argc, char *argv[]){
+
+    if(LASER_STATUS_OK != LASER_SetAllPhaseInactive()){
+
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
 
     shellResultSuccess();
 
