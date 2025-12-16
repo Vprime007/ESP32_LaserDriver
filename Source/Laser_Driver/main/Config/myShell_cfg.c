@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 
-
+#include "thermalManagement.h"
 #include "laserController.h"
 #include "myShell_cfg.h"
 
@@ -42,6 +42,10 @@ static int32_t shellSetPhaseOvt(int32_t argc, char *argv[]);
 static int32_t shellSetLoadOvt(int32_t argc, char *argv[]);
 static int32_t shellGetTemperature(int32_t argc, char *argv[]);
 static int32_t shellGetPwr(int32_t argc, char *argv[]);
+static int32_t shellEnableLoadFan(int32_t argc, char *argv[]);
+static int32_t shellDisableLoadFan(int32_t argc, char *argv[]);
+static int32_t shellEnablePhaseFan(int32_t argc, char *argv[]);
+static int32_t shellDisablePhaseFan(int32_t argc, char *argv[]);
 
 static void shellResultSuccess(void);
 static void shellResultError(int32_t error);
@@ -67,6 +71,10 @@ static SHELL_Command_t shell_cmd_table[] = {
     {"set-load-ovt", shellSetLoadOvt, "Set Load OVT threshold (in *C)"},
     {"get-temp", shellGetTemperature, "Get temperature values (in *C)"},
     {"get-pwr", shellGetPwr, "Get pwr measurements"},
+    {"enable-load-fan", shellEnableLoadFan, "Enable the Load fan"},
+    {"disable-load-fan", shellDisableLoadFan, "Disable the load fan"},
+    {"enable-phases-fan", shellEnablePhaseFan, "Enable the Phases fan"},
+    {"disable-phases-fan", shellDisablePhaseFan, "Disable the Phases fan"},
 };
 
 static uint32_t nb_shell_cmd = ARRAY_SIZE(shell_cmd_table);
@@ -399,6 +407,114 @@ static int32_t shellGetTemperature(int32_t argc, char *argv[]){
 *******************************************************************************/
 static int32_t shellGetPwr(int32_t argc, char *argv[]){
 
+    return SHELL_ERR_NO_ERROR;
+}
+
+/***************************************************************************//*!
+*  \brief   Shell enable load fan.
+*
+*   Shell cmd to enable load fan.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  argc                    Number of arguments.
+*   \param[in]  argv                    Arguments tables.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
+static int32_t shellEnableLoadFan(int32_t argc, char *argv[]){
+
+    if(THERMAL_STATUS_OK != THERMAL_SetState(THERMAL_SRC_LOAD_FAN, THERMAL_STATE_ENABLE)){
+
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    shellResultSuccess();
+    return SHELL_ERR_NO_ERROR;
+}
+
+/***************************************************************************//*!
+*  \brief   Shell disable load fan.
+*
+*   Shell cmd to disable load fan.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  argc                    Number of arguments.
+*   \param[in]  argv                    Arguments tables.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
+static int32_t shellDisableLoadFan(int32_t argc, char *argv[]){
+
+    if(THERMAL_STATUS_OK != THERMAL_SetState(THERMAL_SRC_LOAD_FAN, THERMAL_STATE_DISABLE)){
+
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    shellResultSuccess();
+    return SHELL_ERR_NO_ERROR;
+}
+
+/***************************************************************************//*!
+*  \brief   Shell enable phases fan.
+*
+*   Shell cmd to enable phases fan.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  argc                    Number of arguments.
+*   \param[in]  argv                    Arguments tables.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
+static int32_t shellEnablePhaseFan(int32_t argc, char *argv[]){
+
+    if(THERMAL_STATUS_OK != THERMAL_SetState(THERMAL_SRC_PHASE_FAN, THERMAL_STATE_ENABLE)){
+
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    shellResultSuccess();
+    return SHELL_ERR_NO_ERROR;
+}
+
+/***************************************************************************//*!
+*  \brief   Shell disable phases fan.
+*
+*   Shell cmd to disable phases fan.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  argc                    Number of arguments.
+*   \param[in]  argv                    Arguments tables.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
+static int32_t shellDisablePhaseFan(int32_t argc, char *argv[]){
+
+    if(THERMAL_STATUS_OK != THERMAL_SetState(THERMAL_SRC_PHASE_FAN, THERMAL_STATE_DISABLE)){
+
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    shellResultSuccess();
     return SHELL_ERR_NO_ERROR;
 }
 

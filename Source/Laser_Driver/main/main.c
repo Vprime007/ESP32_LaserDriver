@@ -22,6 +22,7 @@
 #include "shellComUART.h"
 #include "myShell.h"
 #include "laserController.h"
+#include "thermalManagement.h"
 
 /******************************************************************************
 *   Private Definitions
@@ -74,6 +75,11 @@ static const char * TAG = "MAIN";
 static void tMainTask(void *pvParameters){
 
     ESP_LOGI(TAG, "Starting Main task");
+
+    //Init thermal management
+    if(THERMAL_STATUS_OK != THERMAL_InitManager()){
+        ESP_LOGW(TAG, "Failed to init thermal management");
+    }
 
     //Init laser controller
     if(LASER_STATUS_OK != LASER_InitController()){
