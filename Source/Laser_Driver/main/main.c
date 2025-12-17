@@ -23,6 +23,7 @@
 #include "myShell.h"
 #include "laserController.h"
 #include "thermalManagement.h"
+#include "alarmController.h"
 
 /******************************************************************************
 *   Private Definitions
@@ -43,6 +44,8 @@
 *   Private Functions Declaration
 *******************************************************************************/
 static void tMainTask(void *pvParameters);
+
+static void alarmCallback(ALARM_Src_t src, ALARM_State_t state);
 
 /******************************************************************************
 *   Public Variables
@@ -75,6 +78,25 @@ static const char * TAG = "MAIN";
 static void tMainTask(void *pvParameters){
 
     ESP_LOGI(TAG, "Starting Main task");
+
+    //Init Alarm controller
+    ALARM_Temp_Config_t default_temp_cfg = {
+        .temp_threshold_10mC = 8000,
+        .temp_release_10mc = 6000,
+    };
+
+    ALARM_Volt_Config_t default_volt_cfg = {
+        .volt_threshold_10mv = 3700,
+        .volt_release_10mv = 4000,
+    };
+
+    if(ALARM_STATUS_OK != ALARM_InitController(&default_temp_cfg, 
+                                               &default_volt_cfg,
+                                               alarmCallback)){
+
+        ESP_LOGW(TAG, "Failed to init alarm controller");
+    }
+
 
     //Init thermal management
     if(THERMAL_STATUS_OK != THERMAL_InitManager()){
@@ -110,6 +132,11 @@ static void tMainTask(void *pvParameters){
         vTaskDelay(1000/portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
+}
+
+static void alarmCallback(ALARM_Src_t src, ALARM_State_t state){
+
+    
 }
 
 /***************************************************************************//*!
