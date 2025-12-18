@@ -44,8 +44,10 @@ static void tAlarmTask(void *pvParameters);
 static AlarmStateCallback_t alarm_callback = NULL;
 static ALARM_State_t alarm_state[ALARM_NUMBER_SRC] = {0};
 
-static int16_t temp_threshold;
-static int16_t temp_release;
+static int16_t phase_temp_threshold;
+static int16_t phase_temp_release;
+static int16_t load_temp_threshold;
+static int16_t load_temp_release;
 static int16_t volt_threshold;
 static int16_t volt_release;
 
@@ -150,25 +152,29 @@ static void tAlarmTask(void *pvParameters){
 *
 *   Side Effects: None.
 *
-*   \param[in]  pTemp_cfg           Pointer to the temp configuration.
+*   \param[in]  pPhase_temp_cfg     Pointer to the phase temp configuration.
+*   \param[in]  pPhase_load_cfg     Pointer to the load temp configuration.
 *   \param[in]  pVolt_cfg           Pointer to the volt configuration.
 *   \param[in]  callback            Alarm state change callback.
 *
 *   \return     Operation status
 *
 *******************************************************************************/
-ALARM_Ret_t ALARM_InitController(ALARM_Temp_Config_t *pTemp_cfg,
+ALARM_Ret_t ALARM_InitController(ALARM_Temp_Config_t *pPhase_temp_cfg,
+                                 ALARM_Temp_Config_t *pLoad_temp_cfg,
                                  ALARM_Volt_Config_t *pVolt_cfg,
                                  AlarmStateCallback_t callback){
 
-    if(pTemp_cfg == NULL || pVolt_cfg == NULL || callback == NULL){
+    if(pPhase_temp_cfg == NULL || pVolt_cfg == NULL || callback == NULL){
         ESP_LOGI(TAG, "Failed to init controller: Invalid params");
         return ALARM_STATUS_ERROR;
     }
 
     //Init alarm thresholds and releases levels
-    temp_threshold = pTemp_cfg->temp_threshold_10mC;
-    temp_release = pTemp_cfg->temp_release_10mc;
+    phase_temp_threshold = pPhase_temp_cfg->temp_threshold_10mC;
+    phase_temp_release = pPhase_temp_cfg->temp_release_10mc;
+    load_temp_threshold = pLoad_temp_cfg->temp_threshold_10mC;
+    load_temp_release = pLoad_temp_cfg->temp_release_10mc;
     volt_threshold = pVolt_cfg->volt_threshold_10mv;
     volt_release = pVolt_cfg->volt_release_10mv;
 
@@ -241,16 +247,46 @@ ALARM_Ret_t ALARM_GetState(ALARM_Src_t src, ALARM_State_t *pState){
 *
 *   Side Effects: None.
 *
+*   \param[in]  src                 Alarm source.
 *   \param[in]  pTemp_cfg           Pointer to the temperature config.
 *
 *   \return     Operation status
 *
 *******************************************************************************/
-ALARM_Ret_t ALARM_SetTempLevel(ALARM_Temp_Config_t *pTemp_cfg){
+ALARM_Ret_t ALARM_SetTempLevel(ALARM_Src_t src, ALARM_Temp_Config_t *pTemp_cfg){
+
+    //check if source is valid for temperature level
+    if((src != ALARM_SRC_PHASE_A_TEMP) && (src != ALARM_SRC_PHASE_B_TEMP) && 
+       (src != ALARM_SRC_LOAD_TEMP)){
+
+        return ALARM_STATUS_ERROR;
+    }
 
     xSemaphoreTake(alarm_mutex_handle, portMAX_DELAY);
-    temp_threshold = pTemp_cfg->temp_threshold_10mC;
-    temp_release = pTemp_cfg->temp_release_10mc;
+
+    switch(src){
+        case ALARM_SRC_PHASE_A_TEMP:
+        case ALARM_SRC_PHASE_B_TEMP:
+        {
+            phase_temp_threshold = pTemp_cfg->temp_threshold_10mC;
+            phase_temp_release = pTemp_cfg->temp_release_10mc;
+        }
+        break;
+
+        case ALARM_SRC_LOAD_TEMP:
+        {
+            load_temp_threshold = pTemp_cfg->temp_threshold_10mC;
+            load_temp_release = pTemp_cfg->temp_release_10mc;
+        }
+        break;
+
+        default:
+        {
+            //Not supposed to be here...
+        }
+        break;
+    }
+    
     xSemaphoreGive(alarm_mutex_handle);
 
     return ALARM_STATUS_OK;
@@ -266,18 +302,47 @@ ALARM_Ret_t ALARM_SetTempLevel(ALARM_Temp_Config_t *pTemp_cfg){
 *
 *   Side Effects: None.
 *
+*   \param[in]  src                 Alarm source.
 *   \param[in]  pTemp_cfg           Pointer to store the temperature config.
 *
 *   \return     Operation status
 *
 *******************************************************************************/
-ALARM_Ret_t ALARM_GetTempLevel(ALARM_Temp_Config_t *pTemp_cfg){
+ALARM_Ret_t ALARM_GetTempLevel(ALARM_Src_t src, ALARM_Temp_Config_t *pTemp_cfg){
 
     if(pTemp_cfg == NULL)   return ALARM_STATUS_ERROR;
 
+    if((src != ALARM_SRC_PHASE_A_TEMP) && (src != ALARM_SRC_PHASE_B_TEMP) && 
+       (src != ALARM_SRC_LOAD_TEMP)){
+
+        return ALARM_STATUS_ERROR;
+    }
+
     xSemaphoreTake(alarm_mutex_handle, portMAX_DELAY);
-    pTemp_cfg->temp_threshold_10mC = temp_threshold;
-    pTemp_cfg->temp_release_10mc = temp_release;
+
+    switch(src){
+        case ALARM_SRC_PHASE_A_TEMP:
+        case ALARM_SRC_PHASE_B_TEMP:
+        {
+            pTemp_cfg->temp_threshold_10mC = phase_temp_threshold;
+            pTemp_cfg->temp_release_10mc = phase_temp_release;
+        }
+        break;
+
+        case ALARM_SRC_LOAD_TEMP:
+        {
+            pTemp_cfg->temp_threshold_10mC = load_temp_threshold;
+            pTemp_cfg->temp_release_10mc = load_temp_release;
+        }
+        break;
+
+        default:
+        {
+            //Not supposed to be here...
+        }
+        break;
+    }
+
     xSemaphoreGive(alarm_mutex_handle);
 
     return ALARM_STATUS_OK;

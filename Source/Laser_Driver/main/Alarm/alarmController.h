@@ -74,14 +74,16 @@ typedef void(*AlarmStateCallback_t)(ALARM_Src_t src, ALARM_State_t state);
 *
 *   Side Effects: None.
 *
-*   \param[in]  pTemp_cfg           Pointer to the temp configuration.
+*   \param[in]  pPhase_temp_cfg     Pointer to the phase temp configuration.
+*   \param[in]  pPhase_load_cfg     Pointer to the load temp configuration.
 *   \param[in]  pVolt_cfg           Pointer to the volt configuration.
 *   \param[in]  callback            Alarm state change callback.
 *
 *   \return     Operation status
 *
 *******************************************************************************/
-ALARM_Ret_t ALARM_InitController(ALARM_Temp_Config_t *pTemp_cfg,
+ALARM_Ret_t ALARM_InitController(ALARM_Temp_Config_t *pPhase_temp_cfg,
+                                 ALARM_Temp_Config_t *pLoad_temp_cfg,
                                  ALARM_Volt_Config_t *pVolt_cfg,
                                  AlarmStateCallback_t callback);
 
@@ -112,12 +114,13 @@ ALARM_Ret_t ALARM_GetState(ALARM_Src_t src, ALARM_State_t *pState);
 *
 *   Side Effects: None.
 *
+*   \param[in]  src                 Alarm source.
 *   \param[in]  pTemp_cfg           Pointer to the temperature config.
 *
 *   \return     Operation status
 *
 *******************************************************************************/
-ALARM_Ret_t ALARM_SetTempLevel(ALARM_Temp_Config_t *pTemp_cfg);
+ALARM_Ret_t ALARM_SetTempLevel(ALARM_Src_t src, ALARM_Temp_Config_t *pTemp_cfg);
 
 /***************************************************************************//*!
 *  \brief Get temperature alarm level.
@@ -129,12 +132,13 @@ ALARM_Ret_t ALARM_SetTempLevel(ALARM_Temp_Config_t *pTemp_cfg);
 *
 *   Side Effects: None.
 *
+*   \param[in]  src                 Alarm source.
 *   \param[in]  pTemp_cfg           Pointer to store the temperature config.
 *
 *   \return     Operation status
 *
 *******************************************************************************/
-ALARM_Ret_t ALARM_GetTempLevel(ALARM_Temp_Config_t *pTemp_cfg);
+ALARM_Ret_t ALARM_GetTempLevel(ALARM_Src_t src, ALARM_Temp_Config_t *pTemp_cfg);
 
 /***************************************************************************//*!
 *  \brief Set voltage level.

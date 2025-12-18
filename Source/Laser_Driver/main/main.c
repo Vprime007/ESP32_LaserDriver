@@ -91,6 +91,7 @@ static void tMainTask(void *pvParameters){
     };
 
     if(ALARM_STATUS_OK != ALARM_InitController(&default_temp_cfg, 
+                                               &default_temp_cfg,
                                                &default_volt_cfg,
                                                alarmCallback)){
 

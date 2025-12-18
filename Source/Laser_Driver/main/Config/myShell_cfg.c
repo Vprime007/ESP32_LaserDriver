@@ -39,8 +39,11 @@ static int32_t shellEnableAllPhase(int32_t argc, char *argv[]);
 static int32_t shellDisableAllPhase(int32_t argc, char *argv[]);
 static int32_t shellEnablePhase(int32_t argc, char *argv[]);
 static int32_t shellDisablePhase(int32_t argc, char *argv[]);
-static int32_t shellSetOverTemp(int32_t argc, char *argv[]);
+static int32_t shellSetPhaseOverTemp(int32_t argc, char *argv[]);
+static int32_t shellSetLoadOverTemp(int32_t argc, char *argv[]);
 static int32_t shellSetUnderVolt(int32_t argc, char *argv[]);
+static int32_t shellGetOverTemp(int32_t argc, char *argv[]);
+static int32_t shellGetUnderVolt(int32_t argc, char *argv[]);
 static int32_t shellGetTemperature(int32_t argc, char *argv[]);
 static int32_t shellGetPwr(int32_t argc, char *argv[]);
 static int32_t shellEnableLoadFan(int32_t argc, char *argv[]);
@@ -68,8 +71,11 @@ static SHELL_Command_t shell_cmd_table[] = {
     {"disable-all-phase", shellDisableAllPhase, "Disable All phases outputs"},
     {"enable-phase", shellEnablePhase, "Enable phase output"},
     {"disable-phase", shellDisablePhase, "Disable phase output"},
-    {"set-over-temp", shellSetOverTemp, "Set phases OVT threshold (in 10m*C)"},
+    {"set-phase-ovt", shellSetPhaseOverTemp, "Set phases OVT threshold (in 10m*C)"},
+    {"set-load_ovt", shellSetLoadOverTemp, "Set load OVT threshold (in 10m*C)"},
     {"set-under-volt", shellSetUnderVolt, "Set Under Voltage threshold (in 10mV)"},
+    {"get-ovt", shellGetOverTemp, "Get OVT threshold (in 10m*C)"},
+    {"get-uvl", shellGetUnderVolt, "Get Under voltage thershold (in 10mV)"},
     {"get-temp", shellGetTemperature, "Get temperature values (in *C)"},
     {"get-pwr", shellGetPwr, "Get pwr measurements"},
     {"enable-load-fan", shellEnableLoadFan, "Enable the Load fan"},
@@ -279,9 +285,9 @@ static int32_t shellDisablePhase(int32_t argc, char *argv[]){
 }
 
 /***************************************************************************//*!
-*  \brief   Shell set Over temperature.
+*  \brief   Shell set phase Over temperature.
 *
-*   Shell cmd to set over temperature threshold.
+*   Shell cmd to set phase over temperature threshold.
 *   
 *   Preconditions: None.
 *
@@ -293,10 +299,9 @@ static int32_t shellDisablePhase(int32_t argc, char *argv[]){
 *   \return     Operation status
 *
 *******************************************************************************/
-static int32_t shellSetOverTemp(int32_t argc, char *argv[]){
+static int32_t shellSetPhaseOverTemp(int32_t argc, char *argv[]){
 
-    if(argc < 3){
-
+    if(argc != 3){
         shellResultError(SHELL_ERR_PAYLOAD);
         return SHELL_ERR_PAYLOAD;
     }
@@ -312,8 +317,8 @@ static int32_t shellSetOverTemp(int32_t argc, char *argv[]){
         return SHELL_ERR_PARAMS;
     }
 
-    //Check if threshold is greater than release
-    if(temp_threshold > temp_release){
+    //make sure that release is lower than threshold
+    if(temp_threshold < temp_release){
 
         shellResultError(SHELL_ERR_PARAMS);
         return SHELL_ERR_PARAMS;
@@ -323,7 +328,47 @@ static int32_t shellSetOverTemp(int32_t argc, char *argv[]){
         .temp_threshold_10mC = temp_threshold,
         .temp_release_10mc = temp_release,
     };
-    if(ALARM_STATUS_OK != ALARM_SetTempLevel(&temp_cfg)){
+    if(ALARM_STATUS_OK != ALARM_SetTempLevel(ALARM_SRC_PHASE_A_TEMP, &temp_cfg)){
+
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    shellResultSuccess();
+
+    return SHELL_ERR_NO_ERROR;
+}
+
+static int32_t shellSetLoadOverTemp(int32_t argc, char *argv[]){
+
+    if(argc != 3){
+        shellResultError(SHELL_ERR_PAYLOAD);
+        return SHELL_ERR_PAYLOAD;
+    }
+
+    int16_t temp_threshold = strtoul(argv[1], NULL, 10);
+    int16_t temp_release = strtoul(argv[2], NULL, 10);
+
+    //Check if within values are within ranges
+    if(((temp_threshold < 2000) || (temp_threshold > 9000)) || 
+       ((temp_release < 2000) || (temp_release > 9000))){
+
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    //make sure that release is lower than threshold
+    if(temp_threshold < temp_release){
+
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    ALARM_Temp_Config_t temp_cfg = {
+        .temp_threshold_10mC = temp_threshold,
+        .temp_release_10mc = temp_release,
+    };
+    if(ALARM_STATUS_OK != ALARM_SetTempLevel(ALARM_SRC_LOAD_TEMP, &temp_cfg)){
 
         shellResultError(SHELL_ERR_PARAMS);
         return SHELL_ERR_PARAMS;
@@ -368,7 +413,7 @@ static int32_t shellSetUnderVolt(int32_t argc, char *argv[]){
         return SHELL_ERR_PARAMS;
     }
 
-    //Check if threshold is greater than release
+    //Make sure that release is greater than threshold
     if(volt_threshold > volt_release){
 
         shellResultError(SHELL_ERR_PARAMS);
@@ -387,6 +432,82 @@ static int32_t shellSetUnderVolt(int32_t argc, char *argv[]){
 
     shellResultSuccess();
 
+    return SHELL_ERR_NO_ERROR;
+}
+
+/***************************************************************************//*!
+*  \brief   Shell get Over temperature threshold.
+*
+*   Shell cmd to get over temperature threshold.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  argc                    Number of arguments.
+*   \param[in]  argv                    Arguments tables.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
+static int32_t shellGetOverTemp(int32_t argc, char *argv[]){
+
+    ALARM_Temp_Config_t phase_cfg;
+    ALARM_Temp_Config_t load_cfg;
+
+    if(ALARM_STATUS_OK != ALARM_GetTempLevel(ALARM_SRC_LOAD_TEMP, &load_cfg)){
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    if(ALARM_STATUS_OK != ALARM_GetTempLevel(ALARM_SRC_PHASE_A_TEMP, &phase_cfg)){
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    char response_buf[128] = {0};
+    snprintf(response_buf, sizeof(response_buf), "%s Phase Thres: %d - Rel: %d / Load Thres: %d - Rel: %d",
+                                                 SHELL_RESPONSE_INIT,
+                                                 phase_cfg.temp_threshold_10mC,
+                                                 phase_cfg.temp_release_10mc,
+                                                 load_cfg.temp_threshold_10mC,
+                                                 load_cfg.temp_release_10mc);
+
+    SHELL_PutLine(response_buf);
+    return SHELL_ERR_NO_ERROR;
+}
+
+/***************************************************************************//*!
+*  \brief   Shell get Under voltage threshold.
+*
+*   Shell cmd to get under voltage threshold.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  argc                    Number of arguments.
+*   \param[in]  argv                    Arguments tables.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
+static int32_t shellGetUnderVolt(int32_t argc, char *argv[]){
+
+    ALARM_Volt_Config_t volt_cfg;
+
+    if(ALARM_STATUS_OK != ALARM_GetVoltLevel(&volt_cfg)){
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    char response_buf[64] = {0};
+    snprintf(response_buf, sizeof(response_buf), "%s Threshold: %d / Release: %d",
+                                                 SHELL_RESPONSE_INIT,
+                                                 volt_cfg.volt_threshold_10mv,
+                                                 volt_cfg.volt_release_10mv);
+
+    SHELL_PutLine(response_buf);
     return SHELL_ERR_NO_ERROR;
 }
 
