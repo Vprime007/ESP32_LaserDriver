@@ -24,6 +24,8 @@
 #include "laserController.h"
 #include "thermalManagement.h"
 #include "alarmController.h"
+#include "temperatureMonitoring.h"
+#include "pwrMonitoring.h"
 
 /******************************************************************************
 *   Private Definitions
@@ -98,7 +100,6 @@ static void tMainTask(void *pvParameters){
         ESP_LOGW(TAG, "Failed to init alarm controller");
     }
 
-
     //Init thermal management
     if(THERMAL_STATUS_OK != THERMAL_InitManager()){
         ESP_LOGW(TAG, "Failed to init thermal management");
@@ -110,6 +111,16 @@ static void tMainTask(void *pvParameters){
     }
     //Turn laser OFF
     LASER_SetAllPhaseInactive();
+
+    //Init temperature monitoring
+    if(TEMP_STATUS_OK != TEMP_InitMonitoring()){
+        ESP_LOGW(TAG, "Failed to init temp monitoring");
+    }
+
+    //Init power monitoring
+    if(PWR_MONITORING_STATUS_OK != PWR_InitMonitoring()){
+        ESP_LOGW(TAG, "Failed to init pwr monitoring");
+    }
 
     //Init myShell com.
     SHCOM_Config_t shell_cfg = {

@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "temperatureMonitoring.h"
+#include "pwrMonitoring.h"
 #include "thermalManagement.h"
 #include "laserController.h"
 #include "alarmController.h"
@@ -528,6 +530,33 @@ static int32_t shellGetUnderVolt(int32_t argc, char *argv[]){
 *******************************************************************************/
 static int32_t shellGetTemperature(int32_t argc, char *argv[]){
 
+    int16_t phase_a_temp;
+    int16_t phase_b_temp;
+    int16_t load_temp;
+
+    if(TEMP_STATUS_OK != TEMP_GetTemperature(TEMP_SENSOR_ID_PHASE_A, &phase_a_temp)){
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    if(TEMP_STATUS_OK != TEMP_GetTemperature(TEMP_SENSOR_ID_PHASE_B, &phase_b_temp)){
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    if(TEMP_STATUS_OK != TEMP_GetTemperature(TEMP_SENSOR_ID_LOAD, &load_temp)){
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    char response_buf[128] = {0};
+    snprintf(response_buf, sizeof(response_buf), "%s Phase A: %d - Phase B: %d - Load: %d",
+                                                 SHELL_RESPONSE_INIT,
+                                                 phase_a_temp,
+                                                 phase_b_temp,
+                                                 load_temp);
+
+    SHELL_PutLine(response_buf);
 
     return SHELL_ERR_NO_ERROR;
 }
@@ -549,6 +578,33 @@ static int32_t shellGetTemperature(int32_t argc, char *argv[]){
 *******************************************************************************/
 static int32_t shellGetPwr(int32_t argc, char *argv[]){
 
+    int16_t bus_volt;
+    int16_t phase_a_current;
+    int16_t phase_b_current;
+
+    if(PWR_MONITORING_STATUS_OK != PWR_GetBusVoltage(&bus_volt)){
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    if(PWR_MONITORING_STATUS_OK != PWR_GetPhaseACurrent(&phase_a_current)){
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    if(PWR_MONITORING_STATUS_OK != PWR_GetPhaseBCurrent(&phase_b_current)){
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    char response_buf[128] = {0};
+    snprintf(response_buf, sizeof(response_buf), "%s Bus: %d - Phase A: %d - Phase B: %d",
+                                                 SHELL_RESPONSE_INIT,
+                                                 bus_volt,
+                                                 phase_a_current,
+                                                 phase_b_current);
+
+    SHELL_PutLine(response_buf);
     return SHELL_ERR_NO_ERROR;
 }
 
