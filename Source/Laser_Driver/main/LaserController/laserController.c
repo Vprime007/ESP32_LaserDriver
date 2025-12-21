@@ -4,6 +4,7 @@
 #include "freertos/semphr.h"
 
 #include "esp_log.h"
+#include "driver/gpio.h"
 
 #include "hwi.h"
 #include "ledDriver.h"
@@ -89,6 +90,19 @@ LASER_Ret_t LASER_InitController(void){
         ESP_LOGE(TAG, "Failed to create laser mutex");
     }
 
+    //Init Laser alim gpio
+    gpio_config_t alim_cfg = {
+        .intr_type = GPIO_INTR_DISABLE,
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pin_bit_mask = (1ULL << HWI_PHASE_EN_GPIO),
+    };
+    gpio_config(&alim_cfg);
+
+    //Disable Phase alim
+    gpio_set_level(HWI_PHASE_EN_GPIO, 0);
+
     //Register the 2 laser diodes as led
     LDRV_CFG_Single_Pwm_Config_t laser_cfg = {
         .gpio_num = HWI_PA_DIM_GPIO,
@@ -116,6 +130,48 @@ LASER_Ret_t LASER_InitController(void){
 
     phase_a_state = LASER_STATE_INACTIVE;
     phase_b_state = LASER_STATE_INACTIVE;
+
+    return LASER_STATUS_OK;
+}
+
+/***************************************************************************//*!
+*  \brief Laser enable phases power bus.
+*
+*   This function is used to enable laser phases power bus.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \return         Operation status
+*
+*******************************************************************************/
+LASER_Ret_t LASER_EnableAlim(void){
+
+    xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
+    gpio_set_level(HWI_PHASE_EN_GPIO, 1);
+    xSemaphoreGive(laser_mutex_handle);
+
+    return LASER_STATUS_OK;
+}
+
+/***************************************************************************//*!
+*  \brief Laser disable phases power bus.
+*
+*   This function is used to disable laser phases power bus.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \return         Operation status
+*
+*******************************************************************************/
+LASER_Ret_t LASER_DisableAlim(void){
+
+    xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
+    gpio_set_level(HWI_PHASE_EN_GPIO, 0);
+    xSemaphoreGive(laser_mutex_handle);
 
     return LASER_STATUS_OK;
 }

@@ -3,7 +3,8 @@ idf_component_register(
     SRCS            "main.c"
                     "UserInterface/userInterface.c"
                     "UserInterface/led/ledDriver.c"
-                    "UserInterface/laserController.c"
+                    
+                    "LaserController/laserController.c"
                     
                     "Config/myShell_cfg.c"
                     "Config/ledDriver_cfg.c"
@@ -20,7 +21,7 @@ idf_component_register(
                     
                     "Alarm/alarmController.c"
 
-                    "ThermalManagement/thermalManagement.c"
+                    "FanController/fanController.c"
 
     PRIV_REQUIRES   spi_flash
                     driver
@@ -33,7 +34,8 @@ idf_component_register(
                     "HWI"
                     "Sensors"
                     "Alarm"
-                    "ThermalManagement"
+                    "FanController"
+                    "LaserController"
 )
 
 component_compile_options(-Wno-error=format= -Wno-format)

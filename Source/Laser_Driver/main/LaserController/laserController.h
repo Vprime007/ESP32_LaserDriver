@@ -65,6 +65,34 @@ typedef enum LASER_Ret_e{
 LASER_Ret_t LASER_InitController(void);
 
 /***************************************************************************//*!
+*  \brief Laser enable phases power bus.
+*
+*   This function is used to enable laser phases power bus.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \return         Operation status
+*
+*******************************************************************************/
+LASER_Ret_t LASER_EnableAlim(void);
+
+/***************************************************************************//*!
+*  \brief Laser disable phases power bus.
+*
+*   This function is used to disable laser phases power bus.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \return         Operation status
+*
+*******************************************************************************/
+LASER_Ret_t LASER_DisableAlim(void);
+
+/***************************************************************************//*!
 *  \brief Set laser active
 *
 *   This function activate both laser phases and set the pwms duty-cycles to the

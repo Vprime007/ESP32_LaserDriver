@@ -1,9 +1,11 @@
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 #include "esp_log.h"
 #include "driver/gpio.h"
 
 #include "hwi.h"
-#include "thermalManagement.h"
+#include "fanController.h"
 
 /******************************************************************************
 *   Private Definitions
@@ -33,10 +35,9 @@
 /******************************************************************************
 *   Private Variables
 *******************************************************************************/
-static THERMAL_State_t load_fan_state = THERMAL_STATE_DISABLE;
-static THERMAL_State_t phase_fan_state = THERMAL_STATE_DISABLE;
+static SemaphoreHandle_t fan_mutex = NULL;
 
-static const char * TAG = "Thermal";
+static const char * TAG = "FAN";
 
 /******************************************************************************
 *   Error Check
@@ -57,9 +58,9 @@ static const char * TAG = "Thermal";
 *   Public Functions Definitions
 *******************************************************************************/
 /***************************************************************************//*!
-*  \brief Thermal management initialization.
+*  \brief Fan controller initialization.
 *
-*   This function is used to initialize the thermal management module.
+*   This function is used to initialize the fan controller module.
 *   
 *   Preconditions: None.
 *
@@ -68,63 +69,123 @@ static const char * TAG = "Thermal";
 *   \return     Operation status
 *
 *******************************************************************************/
-THERMAL_Ret_t THERMAL_InitManager(void){
+FAN_Ret_t FAN_InitController(void){
+
+    //Create mutex
+    fan_mutex = xSemaphoreCreateMutex();
+    if(fan_mutex == NULL){
+        return FAN_STATUS_ERROR;
+    }
 
     //Init gpios
-    gpio_config_t cfg = {
-        .intr_type = GPIO_INTR_DISABLE,
+    gpio_config_t fan_cfg = {
         .mode = GPIO_MODE_OUTPUT,
+        .intr_type = GPIO_INTR_DISABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
         .pull_up_en = GPIO_PULLUP_DISABLE,
-        .pin_bit_mask = (1ULL << HWI_PHASE_FAN_GPIO) | (1ULL << HWI_LOAD_FAN_GPIO),
+        .pin_bit_mask = (1ULL << HWI_LOAD_FAN_GPIO) | 
+                        (1ULL << HWI_PHASE_FAN_GPIO),
     };
-    gpio_config(&cfg);
+    if(ESP_OK != gpio_config(&fan_cfg)){
+        return FAN_STATUS_ERROR;
+    }
 
-    //Force thermal management sources OFF
-    gpio_set_level(HWI_PHASE_FAN_GPIO, 0);
-    gpio_set_level(HWI_LOAD_FAN_GPIO, 0);
+    gpio_set_level(HWI_LOAD_FAN_GPIO, 0);//Turn load fan off
+    gpio_set_level(HWI_PHASE_FAN_GPIO, 0);//Turn phase fan off
 
-    return THERMAL_STATUS_OK;
+    return FAN_STATUS_OK;
 }
 
 /***************************************************************************//*!
-*  \brief Set thermal management source state.
+*  \brief Set fan state.
 *
-*   This function is used to enable/disable a thermal management source.
+*   This function is used to enable/disable a fan.
 *   
 *   Preconditions: None.
 *
 *   Side Effects: None.
 *
-*   \param[in]  source              Thermal management source.
-*   \param[in]  state               Source state (enable/Disable).
+*   \param[in]  fan_id              Target fan ID.
+*   \param[in]  state               Fan state (enabel/Disable)
 *
 *   \return     Operation status
 *
 *******************************************************************************/
-THERMAL_Ret_t THERMAL_SetState(THERMAL_Source_t source, THERMAL_State_t state){
+FAN_Ret_t FAN_SetState(FAN_Id_t fan_id, FAN_State_t state){
 
-    if(source >= THERMAL_SRC_INVALID || state >= THERMAL_STATE_INVALID){
-        ESP_LOGI(TAG, "Failed to set thermal source state: Invalid params");
-        return THERMAL_STATUS_ERROR;
+    if((fan_id >= FAN_ID_INVALID) || (state >= FAN_STATE_INVALID)){
+        return FAN_STATUS_ERROR;
     }
 
-    switch(source){
+    xSemaphoreTake(fan_mutex, portMAX_DELAY);
 
-        case THERMAL_SRC_PHASE_FAN:
+    switch(fan_id){
+        case FAN_ID_LOAD:
         {
-            //Process only if new state differ from the previous one
-            if(state != phase_fan_state){
-                gpio_set_level(HWI_PHASE_FAN_GPIO, ((state == THERMAL_STATE_ENABLE) ? 1 : 0));
+            gpio_set_level(HWI_LOAD_FAN_GPIO, (state == FAN_STATE_ENABLE) ? 1 : 0);
+        }
+        break;
+
+        case FAN_ID_PHASE:
+        {
+            gpio_set_level(HWI_PHASE_FAN_GPIO, (state == FAN_STATE_ENABLE) ? 1 : 0);
+        }
+        break;
+
+        default:
+        {
+            //Not supposed to be here...
+        }
+        break;
+    }
+
+    xSemaphoreGive(fan_mutex);
+
+    return FAN_STATUS_OK;
+}
+
+/***************************************************************************//*!
+*  \brief Get fan state.
+*
+*   This function is used to get the current state of a fan.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  fan_id              Target fan ID.
+*   \param[in]  pState              Pointer to store fan state.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
+FAN_Ret_t FAN_GetState(FAN_Id_t fan_id, FAN_State_t *pState){
+
+    if((fan_id >= FAN_ID_INVALID) || (pState == NULL)){
+        return FAN_STATUS_ERROR;
+    }
+
+    xSemaphoreTake(fan_mutex, portMAX_DELAY);
+
+    switch(fan_id){
+        case FAN_ID_LOAD:
+        {
+            if(1 == gpio_get_level(HWI_LOAD_FAN_GPIO)){
+                *pState = FAN_STATE_ENABLE;
+            }
+            else{
+                *pState = FAN_STATE_DISABLE;
             }
         }
         break;
 
-        case THERMAL_SRC_LOAD_FAN:
+        case FAN_ID_PHASE:
         {
-            //Process only is the new state differ from the previous one
-            if(state != load_fan_state){
-                gpio_set_level(HWI_LOAD_FAN_GPIO, ((state == THERMAL_STATE_ENABLE) ? 1 : 0));
+            if(1 == gpio_get_level(HWI_PHASE_FAN_GPIO)){
+                *pState = FAN_STATE_ENABLE;
+            }
+            else{
+                *pState = FAN_STATE_DISABLE;
             }
         }
         break;
@@ -136,57 +197,11 @@ THERMAL_Ret_t THERMAL_SetState(THERMAL_Source_t source, THERMAL_State_t state){
         break;
     }
 
-    return THERMAL_STATUS_OK;
-}
+    xSemaphoreGive(fan_mutex);
 
-/***************************************************************************//*!
-*  \brief Get thermal management source state.
-*
-*   This function is used to get the current state of a thermal 
-*   management source.
-*   
-*   Preconditions: None.
-*
-*   Side Effects: None.
-*
-*   \param[in]  source              Thermal management source.
-*   \param[in]  pState              Pointer to store source state.
-*
-*   \return     Operation status
-*
-*******************************************************************************/
-THERMAL_Ret_t THERMAL_GetState(THERMAL_Source_t source, THERMAL_State_t *pState){
-
-    if(source >= THERMAL_SRC_INVALID || pState == NULL){
-        ESP_LOGI(TAG, "Failed to get source state: Invalid params");
-        return THERMAL_STATUS_ERROR;
-    }
-
-    switch(source){
-        case THERMAL_SRC_LOAD_FAN:
-        {
-            *pState = load_fan_state;
-        }
-        break;
-
-        case THERMAL_SRC_PHASE_FAN:
-        {
-            *pState = phase_fan_state;
-        }
-        break;
-
-        default:
-        {
-            //Not supposed to be here...
-        }
-        break;
-    }
-
-    return THERMAL_STATUS_OK;
+    return FAN_STATUS_OK;
 }
 
 /******************************************************************************
 *   Interrupts
 *******************************************************************************/
-
-

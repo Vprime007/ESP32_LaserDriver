@@ -6,7 +6,7 @@
 
 #include "temperatureMonitoring.h"
 #include "pwrMonitoring.h"
-#include "thermalManagement.h"
+#include "fanController.h"
 #include "laserController.h"
 #include "alarmController.h"
 #include "myShell_cfg.h"
@@ -37,6 +37,8 @@
 *   Private Functions Declaration
 *******************************************************************************/
 static int32_t shellSetPhaseActiveDuty(int32_t argc, char *argv[]);
+static int32_t shellEnbaleLaserPwrBus(int32_t argc, char *argv[]);
+static int32_t shellDisableLaserPwrBus(int32_t argc, char *argv[]);
 static int32_t shellEnableAllPhase(int32_t argc, char *argv[]);
 static int32_t shellDisableAllPhase(int32_t argc, char *argv[]);
 static int32_t shellEnablePhase(int32_t argc, char *argv[]);
@@ -69,6 +71,8 @@ static void shellResultError(int32_t error);
 static SHELL_Command_t shell_cmd_table[] = {
     {"help", SHELL_HelpHandler, "Lists all commands"},
     {"set-dimming", shellSetPhaseActiveDuty, "Set ON duty-cyle (in percent)"},
+    {"enable-pwr-bus", shellEnbaleLaserPwrBus, "Enable laser power bus"},
+    {"disable-pwr-bus", shellDisableLaserPwrBus, "Disable laser power bus"},
     {"enable-all-phase", shellEnableAllPhase, "Enable All phases outputs"},
     {"disable-all-phase", shellDisableAllPhase, "Disable All phases outputs"},
     {"enable-phase", shellEnablePhase, "Enable phase output"},
@@ -128,6 +132,58 @@ static int32_t shellSetPhaseActiveDuty(int32_t argc, char *argv[]){
     }
 
     shellResultSuccess();
+
+    return SHELL_ERR_NO_ERROR;
+}
+
+/***************************************************************************//*!
+*  \brief   Shell Enable laser Pwr bus.
+*
+*   Shell cmd to enable laser pwr bus.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  argc                    Number of arguments.
+*   \param[in]  argv                    Arguments tables.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
+static int32_t shellEnbaleLaserPwrBus(int32_t argc, char *argv[]){
+
+    if(LASER_STATUS_OK != LASER_EnableAlim()){
+
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
+
+    return SHELL_ERR_NO_ERROR;
+}
+
+/***************************************************************************//*!
+*  \brief   Shell Disable laser Pwr bus.
+*
+*   Shell cmd to disable laser pwr bus.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  argc                    Number of arguments.
+*   \param[in]  argv                    Arguments tables.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
+static int32_t shellDisableLaserPwrBus(int32_t argc, char *argv[]){
+
+    if(LASER_STATUS_OK != LASER_DisableAlim()){
+
+        shellResultError(SHELL_ERR_PARAMS);
+        return SHELL_ERR_PARAMS;
+    }
 
     return SHELL_ERR_NO_ERROR;
 }
@@ -341,6 +397,21 @@ static int32_t shellSetPhaseOverTemp(int32_t argc, char *argv[]){
     return SHELL_ERR_NO_ERROR;
 }
 
+/***************************************************************************//*!
+*  \brief   Shell set Load Over temperature.
+*
+*   Shell cmd to set load over temperature threshold.
+*   
+*   Preconditions: None.
+*
+*   Side Effects: None.
+*
+*   \param[in]  argc                    Number of arguments.
+*   \param[in]  argv                    Arguments tables.
+*
+*   \return     Operation status
+*
+*******************************************************************************/
 static int32_t shellSetLoadOverTemp(int32_t argc, char *argv[]){
 
     if(argc != 3){
@@ -625,7 +696,7 @@ static int32_t shellGetPwr(int32_t argc, char *argv[]){
 *******************************************************************************/
 static int32_t shellEnableLoadFan(int32_t argc, char *argv[]){
 
-    if(THERMAL_STATUS_OK != THERMAL_SetState(THERMAL_SRC_LOAD_FAN, THERMAL_STATE_ENABLE)){
+    if(FAN_STATUS_OK != FAN_SetState(FAN_ID_LOAD, FAN_STATE_ENABLE)){
 
         shellResultError(SHELL_ERR_PARAMS);
         return SHELL_ERR_PARAMS;
@@ -652,7 +723,7 @@ static int32_t shellEnableLoadFan(int32_t argc, char *argv[]){
 *******************************************************************************/
 static int32_t shellDisableLoadFan(int32_t argc, char *argv[]){
 
-    if(THERMAL_STATUS_OK != THERMAL_SetState(THERMAL_SRC_LOAD_FAN, THERMAL_STATE_DISABLE)){
+    if(FAN_STATUS_OK != FAN_SetState(FAN_ID_LOAD, FAN_STATE_DISABLE)){
 
         shellResultError(SHELL_ERR_PARAMS);
         return SHELL_ERR_PARAMS;
@@ -679,7 +750,7 @@ static int32_t shellDisableLoadFan(int32_t argc, char *argv[]){
 *******************************************************************************/
 static int32_t shellEnablePhaseFan(int32_t argc, char *argv[]){
 
-    if(THERMAL_STATUS_OK != THERMAL_SetState(THERMAL_SRC_PHASE_FAN, THERMAL_STATE_ENABLE)){
+    if(FAN_STATUS_OK != FAN_SetState(FAN_ID_PHASE, FAN_STATE_ENABLE)){
 
         shellResultError(SHELL_ERR_PARAMS);
         return SHELL_ERR_PARAMS;
@@ -706,12 +777,11 @@ static int32_t shellEnablePhaseFan(int32_t argc, char *argv[]){
 *******************************************************************************/
 static int32_t shellDisablePhaseFan(int32_t argc, char *argv[]){
 
-    if(THERMAL_STATUS_OK != THERMAL_SetState(THERMAL_SRC_PHASE_FAN, THERMAL_STATE_DISABLE)){
+    if(FAN_STATUS_OK != FAN_SetState(FAN_ID_PHASE, FAN_STATE_DISABLE)){
 
         shellResultError(SHELL_ERR_PARAMS);
         return SHELL_ERR_PARAMS;
     }
-
     shellResultSuccess();
     return SHELL_ERR_NO_ERROR;
 }

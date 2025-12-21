@@ -22,7 +22,7 @@
 #include "shellComUART.h"
 #include "myShell.h"
 #include "laserController.h"
-#include "thermalManagement.h"
+#include "fanController.h"
 #include "alarmController.h"
 #include "temperatureMonitoring.h"
 #include "pwrMonitoring.h"
@@ -100,9 +100,8 @@ static void tMainTask(void *pvParameters){
         ESP_LOGW(TAG, "Failed to init alarm controller");
     }
 
-    //Init thermal management
-    if(THERMAL_STATUS_OK != THERMAL_InitManager()){
-        ESP_LOGW(TAG, "Failed to init thermal management");
+    if(FAN_STATUS_OK != FAN_InitController()){
+        ESP_LOGW(TAG, "Failed to init fan controller");
     }
 
     //Init laser controller
