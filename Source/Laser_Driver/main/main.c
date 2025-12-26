@@ -58,7 +58,6 @@ static void alarmCallback(ALARM_Src_t src, ALARM_State_t state);
 *   Private Variables
 *******************************************************************************/
 static TaskHandle_t main_task_handle = NULL;
-
 static const char * TAG = "MAIN";
 
 /******************************************************************************
