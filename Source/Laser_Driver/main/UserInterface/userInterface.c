@@ -6,6 +6,9 @@
 
 #include "taskPriority.h"
 #include "hwi.h"
+#include "triggerDriver.h"
+#include "alarmController.h"
+#include "laserController.h"
 #include "userInterface.h"
 
 /******************************************************************************
@@ -31,6 +34,8 @@
 *******************************************************************************/
 static void tUiTask(void *pvParameters);
 
+static void triggerCallback(TRIGGER_State_t state);
+
 /******************************************************************************
 *   Public Variables
 *******************************************************************************/
@@ -52,6 +57,50 @@ static const char * TAG = "UI";
 /******************************************************************************
 *   Private Functions Definitions
 *******************************************************************************/
+static void triggerCallback(TRIGGER_State_t state){
+
+    if(state == TRIGGER_STATE_PRESS){
+        ESP_LOGI(TAG, "Trigger Pressed!");
+        //Check if a temperature alarm is active
+        ALARM_State_t phase_a_ovt = ALARM_STATE_INVALID;
+        ALARM_State_t phase_b_ovt = ALARM_STATE_INVALID;
+        ALARM_State_t load_ovt = ALARM_STATE_INVALID;
+
+        ALARM_GetState(ALARM_SRC_PHASE_A_TEMP, &phase_a_ovt);
+        ALARM_GetState(ALARM_SRC_PHASE_B_TEMP, &phase_b_ovt);
+        ALARM_GetState(ALARM_SRC_LOAD_TEMP, &load_ovt);
+
+        if(phase_a_ovt != ALARM_STATE_INACTIVE){
+            ESP_LOGI(TAG, "Trigger blocked by phase A OVT");
+            return;
+        }
+
+        if(phase_b_ovt != ALARM_STATE_INACTIVE){
+            ESP_LOGI(TAG, "Trigger blocked by phase B OVT");
+            return;
+        }
+
+        if(load_ovt != ALARM_STATE_INACTIVE){
+            ESP_LOGI(TAG, "Trigger blocked by load OVT");
+            return;
+        }
+
+        //Power-up laser diode
+        if(LASER_STATUS_OK != LASER_SetAllPhaseActive()){
+            ESP_LOGI(TAG, "Failed to turn laserON!!");
+        }
+
+    }
+    else{
+        ESP_LOGI(TAG, "Trigger Released!");
+
+        //Power-down laser diode
+        if(LASER_STATUS_OK != LASER_SetAllPhaseInactive()){
+            ESP_LOGI(TAG, "Failed to turn laser OFF!!");
+        }
+    }
+}
+
 static void tUiTask(void *pvParameters){
 
     ESP_LOGI(TAG, "Starting UI task");
@@ -75,6 +124,16 @@ static void tUiTask(void *pvParameters){
 *   Public Functions Definitions
 *******************************************************************************/
 UI_Ret_t UI_Init(void){
+
+    TRIGGER_Config_t trigger_cfg = {
+        .active_level = TRIGGER_ACTIVE_LEVEL_HIGH,
+        .trigger_gpio = HWI_TRIGGER_IN,
+    };
+
+    if(TRIGGER_STATUS_OK != TRIGGER_InitDriver(&trigger_cfg, triggerCallback)){
+        ESP_LOGW(TAG, "Failed to init trigger driver");
+        return UI_STATUS_ERROR;
+    }
 
     //Create queue
     ui_event_queue_handle = xQueueCreate(UI_EVENT_QUEUE_SIZE, sizeof(UI_Event_t));
