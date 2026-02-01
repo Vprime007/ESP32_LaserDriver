@@ -225,6 +225,7 @@ LASER_Ret_t LASER_SetActivePercent(uint16_t percent){
             return LASER_STATUS_ERROR;
         }
     }
+
     xSemaphoreGive(laser_mutex_handle);
 
     return LASER_STATUS_OK;
@@ -252,14 +253,13 @@ LASER_Ret_t LASER_SetAllPhaseActive(void){
 
     LASER_State_t current_phase_a = LASER_STATE_INVALID;
     LASER_State_t current_phase_b = LASER_STATE_INVALID;
+
     xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
     current_phase_a = phase_a_state;
     current_phase_b = phase_b_state;
-    xSemaphoreGive(laser_mutex_handle);
 
     //Check if laser is not already active
     if(current_phase_a != LASER_STATE_ACTIVE){
-        xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
         phase_a_state = LASER_STATE_ACTIVE;//Update state
 
         //Apply active percent duty-cycle
@@ -268,12 +268,9 @@ LASER_Ret_t LASER_SetAllPhaseActive(void){
             xSemaphoreGive(laser_mutex_handle);
             return LASER_STATUS_ERROR;
         }
-
-        xSemaphoreGive(laser_mutex_handle);
     }
 
     if(current_phase_b!= LASER_STATE_ACTIVE){
-        xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
         phase_b_state = LASER_STATE_ACTIVE;
 
         //Apply active percent duty-cycle
@@ -283,9 +280,9 @@ LASER_Ret_t LASER_SetAllPhaseActive(void){
             xSemaphoreGive(laser_mutex_handle);
             return LASER_STATUS_ERROR;
         }
-
-        xSemaphoreGive(laser_mutex_handle);
     }
+
+    xSemaphoreGive(laser_mutex_handle);
 
     return LASER_STATUS_OK;
 }
@@ -312,14 +309,13 @@ LASER_Ret_t LASER_SetAllPhaseInactive(void){
 
     LASER_State_t current_phase_a = LASER_STATE_INVALID;
     LASER_State_t current_phase_b = LASER_STATE_INVALID;
+
     xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
     current_phase_a = phase_a_state;
     current_phase_b = phase_b_state;
-    xSemaphoreGive(laser_mutex_handle);
 
     //Check if laser is not already inactive
     if(current_phase_a != LASER_STATE_INACTIVE){
-        xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
         phase_a_state = LASER_STATE_INACTIVE;//Update state
 
         //Apply min percent duty-cycle
@@ -331,8 +327,6 @@ LASER_Ret_t LASER_SetAllPhaseInactive(void){
     }
 
     if(current_phase_b != LASER_STATE_INACTIVE){
-        xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
-
         phase_b_state = LASER_STATE_INACTIVE;
 
         //Apply min percent duty
@@ -342,9 +336,9 @@ LASER_Ret_t LASER_SetAllPhaseInactive(void){
             xSemaphoreGive(laser_mutex_handle);
             return LASER_STATUS_ERROR;
         }
-
-        xSemaphoreGive(laser_mutex_handle);
     }
+
+    xSemaphoreGive(laser_mutex_handle);
 
     return LASER_STATUS_OK;
 }
@@ -373,6 +367,7 @@ LASER_Ret_t LASER_SetPhaseActive(LASER_Phase_t phase){
     }
 
     xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
+
     switch(phase){
         case LASER_PHASE_A:
         {
@@ -410,6 +405,7 @@ LASER_Ret_t LASER_SetPhaseActive(LASER_Phase_t phase){
         }
         break;
     }
+
     xSemaphoreGive(laser_mutex_handle);
 
     return LASER_STATUS_OK;
@@ -438,6 +434,7 @@ LASER_Ret_t LASER_SetPhaseInactive(LASER_Phase_t phase){
     }
 
     xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
+
     switch(phase){
         case LASER_PHASE_A:
         {
@@ -476,7 +473,6 @@ LASER_Ret_t LASER_SetPhaseInactive(LASER_Phase_t phase){
         break;
     }
 
-
     xSemaphoreGive(laser_mutex_handle);
 
     return LASER_STATUS_OK;
@@ -510,6 +506,7 @@ LASER_Ret_t LASER_GetState(LASER_Phase_t phase, LASER_State_t *pState){
     }
 
     xSemaphoreTake(laser_mutex_handle, portMAX_DELAY);
+
     switch(phase){
         case LASER_PHASE_A:
         {
@@ -529,6 +526,7 @@ LASER_Ret_t LASER_GetState(LASER_Phase_t phase, LASER_State_t *pState){
         }
         break;
     }
+    
     xSemaphoreGive(laser_mutex_handle);
 
     return LASER_STATUS_OK;

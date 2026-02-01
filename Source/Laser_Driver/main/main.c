@@ -26,6 +26,8 @@
 #include "alarmController.h"
 #include "temperatureMonitoring.h"
 #include "pwrMonitoring.h"
+#include "ledDriver.h"
+#include "userInterface.h"
 
 /******************************************************************************
 *   Private Definitions
@@ -79,6 +81,16 @@ static const char * TAG = "MAIN";
 static void tMainTask(void *pvParameters){
 
     ESP_LOGI(TAG, "Starting Main task");
+
+    //Init led driver
+    if(LDRV_STATUS_OK != LDRV_InitDriver()){
+        ESP_LOGW(TAG, "Failed to init led driver");
+    }
+
+    //Init User interface
+    if(UI_STATUS_OK != UI_Init()){
+        ESP_LOGW(TAG, "Failed to init User Interface");
+    }
 
     //Init Alarm controller
     ALARM_Temp_Config_t default_temp_cfg = {

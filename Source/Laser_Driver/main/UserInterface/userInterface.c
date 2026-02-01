@@ -9,6 +9,7 @@
 #include "triggerDriver.h"
 #include "alarmController.h"
 #include "laserController.h"
+#include "ledController.h"
 #include "userInterface.h"
 
 /******************************************************************************
@@ -125,6 +126,13 @@ static void tUiTask(void *pvParameters){
 *******************************************************************************/
 UI_Ret_t UI_Init(void){
 
+    //Init led controller
+    if(LED_STATUS_OK != LED_InitController()){
+        ESP_LOGI(TAG, "Failed to init leds controller");
+        return UI_STATUS_ERROR;
+    }
+    
+    //Init trigger driver
     TRIGGER_Config_t trigger_cfg = {
         .active_level = TRIGGER_ACTIVE_LEVEL_HIGH,
         .trigger_gpio = HWI_TRIGGER_IN,

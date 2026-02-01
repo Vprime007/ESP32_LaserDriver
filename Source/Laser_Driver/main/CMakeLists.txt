@@ -2,12 +2,16 @@ idf_component_register(
     
     SRCS            "main.c"
                     "UserInterface/userInterface.c"
+                    "UserInterface/triggerDriver.c"
                     "UserInterface/led/ledDriver.c"
+                    "UserInterface/led/ledController.c"
+                    "UserInterface/sequencer/sequencer.c"
                     
                     "LaserController/laserController.c"
                     
                     "Config/myShell_cfg.c"
                     "Config/ledDriver_cfg.c"
+                    "Config/sequencer_cfg.c"
 
                     "Lib/myShell/src/myShell.c"
 
@@ -29,6 +33,7 @@ idf_component_register(
     INCLUDE_DIRS    "."
                     "UserInterface"
                     "UserInterface/led"
+                    "UserInterface/sequencer"
                     "Config"
                     "Lib/myShell/include"
                     "HWI"

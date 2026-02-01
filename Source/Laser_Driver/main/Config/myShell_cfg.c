@@ -75,8 +75,8 @@ static SHELL_Command_t shell_cmd_table[] = {
     {"disable-pwr-bus", shellDisableLaserPwrBus, "Disable laser power bus"},
     {"enable-all-phase", shellEnableAllPhase, "Enable All phases outputs"},
     {"disable-all-phase", shellDisableAllPhase, "Disable All phases outputs"},
-    {"enable-phase", shellEnablePhase, "Enable phase output"},
-    {"disable-phase", shellDisablePhase, "Disable phase output"},
+    {"enable-phase", shellEnablePhase, "Enable phase output (phase_a / phase_b)"},
+    {"disable-phase", shellDisablePhase, "Disable phase output (phase_a / phase_b)"},
     {"set-phase-ovt", shellSetPhaseOverTemp, "Set phases OVT threshold (in 10m*C)"},
     {"set-load_ovt", shellSetLoadOverTemp, "Set load OVT threshold (in 10m*C)"},
     {"set-under-volt", shellSetUnderVolt, "Set Under Voltage threshold (in 10mV)"},
@@ -338,6 +338,8 @@ static int32_t shellDisablePhase(int32_t argc, char *argv[]){
         shellResultError(SHELL_ERR_PARAMS);
         return SHELL_ERR_PARAMS;
     }
+
+    shellResultSuccess();
 
     return SHELL_ERR_NO_ERROR;
 }
